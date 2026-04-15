@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NashGuide AI — Your Personal Nashville Trip Planner</title>
+<meta name="description" content="AI-powered personalized Nashville trip planning. Get an hour-by-hour itinerary with insider tips in under 2 minutes."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body,#root{background:#0a0a0f!important;color:#fff!important;min-height:100vh}
+body{font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+.playfair{font-family:'Playfair Display',serif}
+a{color:inherit;text-decoration:none}
+
+/* Animations */
+@keyframes floatUp{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-600px) rotate(20deg);opacity:0}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 20px rgba(255,182,30,.3),0 0 60px rgba(255,182,30,.1)}50%{box-shadow:0 0 30px rgba(255,182,30,.5),0 0 80px rgba(255,182,30,.2)}}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.shimmer-text{background:linear-gradient(90deg,#FFB61E 0%,#fff 15%,#FFB61E 30%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 5s linear infinite}
+.slide-up{animation:slideUp .8s ease-out forwards}
+.slide-up-1{animation:slideUp .8s ease-out .1s forwards;opacity:0}
+.slide-up-2{animation:slideUp .8s ease-out .2s forwards;opacity:0}
+.slide-up-3{animation:slideUp .8s ease-out .3s forwards;opacity:0}
+.slide-up-4{animation:slideUp .8s ease-out .4s forwards;opacity:0}
+.glow-btn{animation:pulseGlow 3s ease-in-out infinite}
+.fade-in{animation:fadeIn .5s ease-out}
+
+.grain::after{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:1}
+
+.note{position:absolute;pointer-events:none;user-select:none;color:rgba(255,182,30,.15);animation:floatUp 8s ease-in-out infinite;bottom:-20px}
+
+/* Utilities */
+.container{max-width:1100px;margin:0 auto;padding:0 20px}
+.text-center{text-align:center}
+.amber{color:#FFB61E}
+.gray4{color:#9ca3af}
+.gray5{color:#6b7280}
+.gray6{color:#4b5563}
+.flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.gap-2{gap:8px}.gap-3{gap:12px}.gap-4{gap:16px}.gap-6{gap:24px}
+.grid{display:grid}.grid-3{grid-template-columns:repeat(3,1fr)}
+.relative{position:relative}
+.hidden{display:none}
+
+.btn-primary{display:inline-flex;align-items:center;gap:8px;padding:16px 40px;background:linear-gradient(to right,#f59e0b,#f97316);color:#000;font-weight:700;font-size:18px;border:none;border-radius:999px;cursor:pointer;transition:all .2s}
+.btn-primary:hover{transform:scale(1.05)}
+.btn-primary:active{transform:scale(.95)}
+
+.card{padding:24px;border-radius:16px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02);transition:all .3s}
+.card:hover{border-color:rgba(245,158,11,.1);background:rgba(255,255,255,.04)}
+
+.tag{display:inline-block;padding:6px 16px;border-radius:999px;border:1px solid rgba(245,158,11,.3);color:#fbbf24;font-size:12px;letter-spacing:2px;text-transform:uppercase;background:rgba(245,158,11,.05)}
+
+.check-icon{width:16px;height:16px;color:#f59e0b;flex-shrink:0;margin-top:2px}
+
+/* Quiz */
+.quiz-option{width:100%;text-align:left;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);color:#d1d5db;cursor:pointer;font-size:16px;font-family:inherit;transition:all .2s}
+.quiz-option:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.04);transform:scale(1.01)}
+.quiz-option.selected{border-color:#f59e0b;background:rgba(245,158,11,.1);color:#fff}
+
+.progress-bar{width:100%;height:4px;background:rgba(255,255,255,.05)}
+.progress-fill{height:100%;background:linear-gradient(to right,#f59e0b,#f97316);transition:width .5s}
+
+.input{width:100%;padding:12px 20px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:14px;font-family:inherit;outline:none}
+.input:focus{border-color:rgba(245,158,11,.5)}
+.input::placeholder{color:#4b5563}
+
+/* Pricing */
+.tier-card{position:relative;padding:24px;border-radius:16px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02);cursor:pointer;transition:all .2s}
+.tier-card:hover{transform:scale(1.02)}
+.tier-card.popular{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.05)}
+.tier-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);padding:4px 16px;background:linear-gradient(to right,#f59e0b,#f97316);color:#000;font-size:12px;font-weight:700;border-radius:999px;white-space:nowrap}
+.tier-btn{width:100%;padding:12px;border-radius:999px;font-weight:700;font-size:14px;border:none;cursor:pointer;transition:all .2s;font-family:inherit}
+.tier-btn-primary{background:linear-gradient(to right,#f59e0b,#f97316);color:#000}
+.tier-btn-secondary{background:rgba(255,255,255,.05);color:#fff}
+.tier-btn-secondary:hover{background:rgba(255,255,255,.1)}
+
+/* Stars */
+.star{fill:#FFB61E;width:16px;height:16px}
+
+/* Responsive */
+@media(max-width:768px){
+  .grid-3{grid-template-columns:1fr}
+  h1{font-size:48px!important}
+  .hero-subtitle{font-size:16px!important}
+  .neighborhoods{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const API_BASE = window.location.origin;
+
+const TIERS = [
+  { id:"classic", name:"NashGuide Classic", price:9.99, tagline:"Your personal Nashville blueprint", popular:false,
+    features:["Hour-by-hour custom itinerary","Insider tips from locals","Interactive map with all your stops","PDF + mobile-friendly web link","Restaurant & bar recommendations"] },
+  { id:"vip", name:"NashGuide VIP", price:29.99, tagline:"The full Nashville experience", popular:true,
+    features:["Everything in Classic","Hidden gems only locals know","Reservation links pre-loaded","Custom Spotify playlist for your trip","Packing list + Nashville survival tips","Priority email support"] },
+  { id:"bach", name:"Bachelorette Pack", price:19.99, tagline:"Nashville bach done right", popular:false,
+    features:["Custom bachelorette itinerary","Bar crawl route mapped out","Best photo op spots","Matching schedule cards (printable)","Party supply checklist","Group dinner recommendations"] }
+];
+
+const QUIZ_STEPS = [
+  { id:"dates", question:"When are y'all coming to Nashville?", type:"select", options:["This weekend","Next week","This month","Pick dates"] },
+  { id:"days", question:"How many days you got?", type:"select", options:["1 day","2 days","3 days","4 days","5+ days"] },
+  { id:"group", question:"Who's joining the party?", type:"select", options:["Solo adventure","Couple's trip","Friends trip","Family","Bachelorette / Bachelor","Work trip"] },
+  { id:"vibe", question:"What's your Nashville vibe?", type:"select", options:["Honky-tonks & nightlife","Food & drink scene","Music history & culture","Outdoors & adventure","Mix of everything"] },
+  { id:"budget", question:"How are we spending?", type:"select", options:["Budget-friendly","Mid-range","Treat ourselves","Money's no object"] },
+  { id:"mustdos", question:"Any must-dos or special requests?", type:"text", placeholder:'e.g. "We HAVE to see Broadway" or "My friend is vegan"' }
+];
+
+const NEIGHBORHOODS = [
+  { name:"Broadway", emoji:"\u{1F3B8}", desc:"Honky-tonk heaven" },
+  { name:"The Gulch", emoji:"\u{1F378}", desc:"Trendy eats & murals" },
+  { name:"East Nashville", emoji:"\u{1F3A8}", desc:"Indie & eclectic" },
+  { name:"12 South", emoji:"\u2615", desc:"Boutiques & brunch" },
+  { name:"Germantown", emoji:"\u{1F37A}", desc:"Historic & hip" },
+  { name:"Music Row", emoji:"\u{1F3B5}", desc:"Where legends record" }
+];
+
+const TESTIMONIALS = [
+  { text:"We followed this thing to the letter and had the best weekend of our lives. The hot chicken ranking alone was worth $10.", author:"Sarah M.", trip:"Bachelorette weekend", rating:5 },
+  { text:"The insider tips were legit. We skipped every tourist trap and ate like kings. My wife is still talking about that taco place in East Nash.", author:"Marcus T.", trip:"Couple's getaway", rating:5 },
+  { text:"Planned our entire 3-day family trip in 2 minutes. Kids loved Centennial Park, I loved not having to Google anything for 72 hours.", author:"Jennifer K.", trip:"Family vacation", rating:5 }
+];
+
+const CheckSVG = () => (
+  <svg className="check-icon" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+);
+
+const Stars = ({count}) => (
+  <div className="flex gap-1">
+    {Array.from({length:count}).map((_,i) => (
+      <svg key={i} className="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    ))}
+  </div>
+);
+
+/* ============ LANDING ============ */
+function Landing({ onStart, onWaitlist, waitlistDone }) {
+  const [email, setEmail] = useState("");
+  return (
+    <div className="grain" style={{minHeight:'100vh',background:'#0a0a0f'}}>
+      {/* HERO */}
+      <section className="relative" style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',overflow:'hidden'}}>
+        <div style={{position:'absolute',inset:0,overflow:'hidden'}}>
+          <div style={{position:'absolute',top:'25%',left:'25%',width:384,height:384,borderRadius:'50%',background:'rgba(245,158,11,.05)',filter:'blur(60px)'}}/>
+          <div style={{position:'absolute',bottom:'25%',right:'25%',width:320,height:320,borderRadius:'50%',background:'rgba(249,115,22,.05)',filter:'blur(60px)'}}/>
+        </div>
+        <div style={{position:'absolute',inset:0,overflow:'hidden'}}>
+          {[5,15,25,38,50,62,75,85,92].map((l,i) => (
+            <div key={i} className="note" style={{left:l+'%',fontSize:14+Math.random()*16,animationDelay:i*1.2+'s'}}>{["\u266A","\u266B","\u266C","\u2669"][i%4]}</div>
+          ))}
+        </div>
+        <div className="relative text-center" style={{maxWidth:800,zIndex:10}}>
+          <div className="slide-up" style={{marginBottom:24}}><span className="tag">AI-Powered Trip Planning</span></div>
+          <h1 className="slide-up-1 playfair" style={{fontSize:80,fontWeight:800,lineHeight:1,marginBottom:24}}>Nashville, <span className="shimmer-text" style={{fontStyle:'italic'}}>your way</span></h1>
+          <p className="slide-up-2 hero-subtitle" style={{fontSize:20,color:'#9ca3af',maxWidth:600,margin:'0 auto 40px',lineHeight:1.6}}>Tell us your vibe. Our AI builds your perfect Nashville trip in under 2 minutes — hour-by-hour, with insider tips no guidebook has.</p>
+          <div className="slide-up-3 flex items-center justify-center gap-4" style={{flexWrap:'wrap',marginBottom:64}}>
+            <button className="btn-primary glow-btn" onClick={onStart}>
+              Plan My Trip
+              <svg style={{width:20,height:20}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </button>
+            <span className="gray5" style={{fontSize:14}}>Takes 90 seconds &middot; Starts at $9.99</span>
+          </div>
+          <div className="slide-up-4 flex items-center justify-center gap-6" style={{flexWrap:'wrap',fontSize:14,color:'#6b7280'}}>
+            {["14M+ visitors/year","200+ curated spots","Delivered instantly"].map((t,i) => (
+              <span key={i} className="flex items-center gap-2"><CheckSVG/>{t}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section style={{padding:'128px 20px'}}>
+        <div className="container text-center">
+          <h2 className="playfair" style={{fontSize:48,fontWeight:700,marginBottom:16}}>Three steps to <span className="amber" style={{fontStyle:'italic'}}>perfect</span></h2>
+          <p className="gray5" style={{fontSize:18,marginBottom:80}}>No research. No guesswork. No FOMO.</p>
+          <div className="grid grid-3 gap-6">
+            {[
+              {step:"01",title:"Tell us your vibe",desc:"Quick 6-question quiz about your dates, group, budget, and what sounds fun. Takes 90 seconds.",icon:"\u{1F3A4}"},
+              {step:"02",title:"AI builds your trip",desc:"Our Nashville-trained AI crafts an hour-by-hour plan with places most tourists never find.",icon:"\u26A1"},
+              {step:"03",title:"Go have the time of your life",desc:"Get a beautiful PDF + live link with maps, tips, and reservation links. Just follow the plan.",icon:"\u{1F389}"}
+            ].map((item,i) => (
+              <div key={i} className="card">
+                <div style={{fontSize:48,marginBottom:16}}>{item.icon}</div>
+                <div style={{color:'rgba(245,158,11,.4)',fontSize:14,fontFamily:'monospace',marginBottom:8}}>{item.step}</div>
+                <h3 style={{fontSize:20,fontWeight:700,marginBottom:12}}>{item.title}</h3>
+                <p className="gray4" style={{fontSize:14,lineHeight:1.6}}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* NEIGHBORHOODS */}
+      <section style={{padding:'64px 20px',borderTop:'1px solid rgba(255,255,255,.05)',borderBottom:'1px solid rgba(255,255,255,.05)'}}>
+        <p className="text-center gray6" style={{fontSize:12,letterSpacing:3,textTransform:'uppercase',marginBottom:32}}>We know every corner</p>
+        <div className="neighborhoods flex justify-center gap-6" style={{flexWrap:'wrap',padding:'0 20px'}}>
+          {NEIGHBORHOODS.map((n,i) => (
+            <div key={i} className="flex items-center gap-3" style={{padding:'12px 20px',borderRadius:999,border:'1px solid rgba(255,255,255,.05)',background:'rgba(255,255,255,.02)'}}>
+              <span style={{fontSize:24}}>{n.emoji}</span>
+              <div><div style={{fontWeight:700,fontSize:14}}>{n.name}</div><div className="gray5" style={{fontSize:12}}>{n.desc}</div></div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* WHAT YOU GET */}
+      <section style={{padding:'128px 20px'}}>
+        <div className="container text-center">
+          <h2 className="playfair" style={{fontSize:48,fontWeight:700,marginBottom:16}}>Not a generic <span className="amber" style={{fontStyle:'italic'}}>listicle</span></h2>
+          <p className="gray5" style={{fontSize:18,maxWidth:560,margin:'0 auto 64px'}}>Your itinerary reads like advice from a friend who's lived here 10 years, not a TripAdvisor algorithm.</p>
+          <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:16}}>
+            {[
+              {title:"Hour-by-hour schedule",desc:'Not just "go to Broadway." We tell you where to be at 10am, noon, 3pm, and midnight.',icon:"\u{1F550}"},
+              {title:"Insider ordering tips",desc:'"Get the smoked wings at Peg Leg. Skip the brisket. Trust us."',icon:"\u{1F357}"},
+              {title:"Skip-the-line intel",desc:"We know which spots have a 2-hour wait and which hidden gem next door is just as good.",icon:"\u23ED\uFE0F"},
+              {title:"Neighborhood flow",desc:"Your day is routed so you're never backtracking across town wasting time in Ubers.",icon:"\u{1F5FA}\uFE0F"},
+              {title:"Real local energy",desc:"We'll send you to the taco truck in East Nash, not the chain restaurant in a hotel lobby.",icon:"\u{1F32E}"},
+              {title:"Maps & links ready",desc:"Every stop has a pin, directions, and a reservation link. Just tap and go.",icon:"\u{1F4CD}"}
+            ].map((item,i) => (
+              <div key={i} className="card flex gap-4" style={{textAlign:'left'}}>
+                <span style={{fontSize:24,marginTop:2}}>{item.icon}</span>
+                <div><h4 style={{fontWeight:700,marginBottom:4}}>{item.title}</h4><p className="gray4" style={{fontSize:14,lineHeight:1.6}}>{item.desc}</p></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section style={{padding:'128px 20px'}}>
+        <div className="container">
+          <h2 className="playfair text-center" style={{fontSize:48,fontWeight:700,marginBottom:64}}>Don't take our word for it</h2>
+          <div className="grid grid-3 gap-6">
+            {TESTIMONIALS.map((t,i) => (
+              <div key={i} className="card">
+                <Stars count={t.rating}/>
+                <p className="gray4" style={{margin:'16px 0',lineHeight:1.6,fontSize:14,fontStyle:'italic'}}>"{t.text}"</p>
+                <div className="flex items-center gap-3">
+                  <div style={{width:36,height:36,borderRadius:'50%',background:'linear-gradient(135deg,#f59e0b,#ea580c)',display:'flex',alignItems:'center',justifyContent:'center',color:'#000',fontWeight:700,fontSize:14}}>{t.author[0]}</div>
+                  <div><div style={{fontWeight:700,fontSize:14}}>{t.author}</div><div className="gray5" style={{fontSize:12}}>{t.trip}</div></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING PREVIEW */}
+      <section style={{padding:'128px 20px'}}>
+        <div className="container text-center">
+          <h2 className="playfair" style={{fontSize:48,fontWeight:700,marginBottom:16}}>Less than a <span className="amber" style={{fontStyle:'italic'}}>Broadway beer</span></h2>
+          <p className="gray5" style={{fontSize:18,marginBottom:64}}>You're spending $1,000+ on this trip. Spend $10 to make sure you don't waste it.</p>
+          <div className="grid grid-3 gap-6">
+            {TIERS.map(tier => (
+              <div key={tier.id} className={`tier-card ${tier.popular?'popular':''}`} onClick={onStart}>
+                {tier.popular && <div className="tier-badge">MOST POPULAR</div>}
+                <h3 style={{fontSize:18,fontWeight:700,marginBottom:4}}>{tier.name}</h3>
+                <p className="gray5" style={{fontSize:14,marginBottom:16}}>{tier.tagline}</p>
+                <div style={{fontSize:40,fontWeight:700,marginBottom:24}}>${tier.price}<span className="gray5" style={{fontSize:16,fontWeight:400}}> one-time</span></div>
+                <ul style={{listStyle:'none',marginBottom:24}}>
+                  {tier.features.map((f,i) => (
+                    <li key={i} className="flex items-center gap-2" style={{fontSize:14,color:'#d1d5db',marginBottom:10,textAlign:'left'}}><CheckSVG/>{f}</li>
+                  ))}
+                </ul>
+                <button className={`tier-btn ${tier.popular?'tier-btn-primary':'tier-btn-secondary'}`}>Get Started</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* EMAIL CAPTURE */}
+      <section style={{padding:'128px 20px'}}>
+        <div className="container text-center" style={{maxWidth:560}}>
+          <h2 className="playfair" style={{fontSize:36,fontWeight:700,marginBottom:16}}>Not ready yet?</h2>
+          <p className="gray4" style={{marginBottom:32}}>Drop your email and we'll send you a free "Top 10 Mistakes Nashville Tourists Make" guide.</p>
+          {waitlistDone ? (
+            <div className="card" style={{borderColor:'rgba(245,158,11,.3)',background:'rgba(245,158,11,.05)'}}>
+              <div style={{fontSize:24,marginBottom:8}}>{"\u{1F3B8}"}</div>
+              <p style={{fontWeight:700,color:'#fbbf24'}}>You're in! Check your inbox.</p>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="your@email.com" style={{flex:1,borderRadius:999}}/>
+              <button onClick={()=>{if(email){onWaitlist(email);setEmail('')}}} style={{padding:'12px 24px',background:'linear-gradient(to right,#f59e0b,#f97316)',color:'#000',fontWeight:700,border:'none',borderRadius:999,fontSize:14,cursor:'pointer'}}>Send it</button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{borderTop:'1px solid rgba(255,255,255,.05)',padding:'48px 20px'}}>
+        <div className="container flex items-center justify-center gap-4" style={{flexWrap:'wrap',justifyContent:'space-between'}}>
+          <div className="flex items-center gap-2">
+            <span style={{fontSize:20}}>{"\u{1F3B8}"}</span>
+            <span style={{fontWeight:700,fontSize:18}}>NashGuide</span>
+            <span style={{color:'#fbbf24',fontSize:12,fontWeight:700,background:'rgba(245,158,11,.1)',padding:'2px 8px',borderRadius:4}}>AI</span>
+          </div>
+          <p className="gray6" style={{fontSize:14}}>Made with {"\u266A"} in Nashville, TN</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ============ QUIZ ============ */
+function Quiz({ step, answers, onAnswer, onBack }) {
+  const [textInput, setTextInput] = useState("");
+  const current = QUIZ_STEPS[step];
+  const progress = ((step+1)/QUIZ_STEPS.length)*100;
+  return (
+    <div className="fade-in" style={{minHeight:'100vh',background:'#0a0a0f',display:'flex',flexDirection:'column'}}>
+      <div className="progress-bar"><div className="progress-fill" style={{width:progress+'%'}}/></div>
+      <div style={{padding:16}}>
+        <button onClick={onBack} className="flex items-center gap-2 gray5" style={{background:'none',border:'none',cursor:'pointer',fontSize:14,fontFamily:'inherit',color:'#6b7280'}}>
+          <svg style={{width:16,height:16}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg> Back
+        </button>
+      </div>
+      <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 20px 80px'}}>
+        <div style={{width:'100%',maxWidth:520}} key={step}>
+          <div style={{color:'rgba(245,158,11,.4)',fontSize:14,fontFamily:'monospace',marginBottom:12}}>{step+1} / {QUIZ_STEPS.length}</div>
+          <h2 className="playfair" style={{fontSize:36,fontWeight:700,marginBottom:40}}>{current.question}</h2>
+          {current.type === 'select' ? (
+            <div className="flex flex-col gap-3">
+              {current.options.map(opt => (
+                <button key={opt} className={`quiz-option ${answers[current.id]===opt?'selected':''}`} onClick={()=>onAnswer(current.id,opt)}>{opt}</button>
+              ))}
+            </div>
+          ) : (
+            <div>
+              <textarea className="input" value={textInput} onChange={e=>setTextInput(e.target.value)} placeholder={current.placeholder} rows={3} style={{resize:'none',marginBottom:16}}/>
+              <button className="btn-primary" style={{fontSize:14,padding:'12px 32px'}} onClick={()=>onAnswer(current.id,textInput||"No special requests")}>{textInput?'Next':'Skip'}</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ PRICING ============ */
+function Pricing({ answers, onSelect, onBack }) {
+  return (
+    <div className="fade-in" style={{minHeight:'100vh',background:'#0a0a0f',display:'flex',flexDirection:'column'}}>
+      <div style={{padding:16}}>
+        <button onClick={onBack} className="flex items-center gap-2" style={{background:'none',border:'none',cursor:'pointer',fontSize:14,fontFamily:'inherit',color:'#6b7280'}}>
+          <svg style={{width:16,height:16}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg> Back
+        </button>
+      </div>
+      <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'0 20px 48px'}}>
+        <div className="flex items-center gap-2" style={{padding:'8px 16px',borderRadius:999,background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.2)',color:'#4ade80',fontSize:14,marginBottom:24}}>
+          <CheckSVG/> Your {answers.days||'trip'} {(answers.group||'trip').toLowerCase()} is ready to plan
+        </div>
+        <h2 className="playfair text-center" style={{fontSize:48,fontWeight:700,marginBottom:12}}>Pick your <span className="amber" style={{fontStyle:'italic'}}>experience</span></h2>
+        <p className="gray5 text-center" style={{marginBottom:48}}>One payment. Instant delivery. No subscriptions.</p>
+        <div className="grid grid-3 gap-6" style={{width:'100%',maxWidth:900}}>
+          {TIERS.map(tier => (
+            <div key={tier.id} className={`tier-card ${tier.popular?'popular':''}`} onClick={()=>onSelect(tier)}>
+              {tier.popular && <div className="tier-badge">MOST POPULAR</div>}
+              <h3 style={{fontSize:18,fontWeight:700,marginBottom:4}}>{tier.name}</h3>
+              <p className="gray5" style={{fontSize:14,marginBottom:16}}>{tier.tagline}</p>
+              <div style={{fontSize:40,fontWeight:700,marginBottom:24}}>${tier.price}</div>
+              <ul style={{listStyle:'none',marginBottom:24}}>
+                {tier.features.map((f,i) => (
+                  <li key={i} className="flex items-center gap-2" style={{fontSize:14,color:'#d1d5db',marginBottom:8,textAlign:'left'}}><CheckSVG/>{f}</li>
+                ))}
+              </ul>
+              <button className={`tier-btn ${tier.popular?'tier-btn-primary':'tier-btn-secondary'}`}>Choose {tier.name.split(' ').pop()}</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ CHECKOUT ============ */
+function Checkout({ tier, onBack }) {
+  const [email, setEmail] = useState("");
+  const [processing, setProcessing] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+
+  const handlePay = async () => {
+    if (!email) return;
+    setProcessing(true);
+    try {
+      // Create payment
+      const res = await fetch(API_BASE + '/api/payment/create', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ session_id: sessionId, product_type: tier.id, amount: tier.price, email })
+      });
+      const data = await res.json();
+      if (data.approval_url) {
+        window.location.href = data.approval_url;
+      } else {
+        alert('Payment setup failed. Please try again.');
+      }
+    } catch(e) {
+      alert('Error connecting to payment. Please try again.');
+    }
+    setProcessing(false);
+  };
+
+  return (
+    <div style={{minHeight:'100vh',background:'#0a0a0f',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:20}}>
+      <div style={{width:'100%',maxWidth:440}}>
+        <button onClick={onBack} className="flex items-center gap-2" style={{background:'none',border:'none',cursor:'pointer',fontSize:14,fontFamily:'inherit',color:'#6b7280',marginBottom:32}}>
+          <svg style={{width:16,height:16}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg> Back to plans
+        </button>
+        <div className="card" style={{marginBottom:24}}>
+          <h3 style={{fontWeight:700,fontSize:18,marginBottom:4}}>{tier.name}</h3>
+          <p className="gray5" style={{fontSize:14,marginBottom:16}}>{tier.tagline}</p>
+          <div style={{fontSize:48,fontWeight:700,marginBottom:24}}>${tier.price} <span className="gray5" style={{fontSize:16,fontWeight:400}}>USD</span></div>
+          <div style={{marginBottom:16}}>
+            <label className="gray4" style={{fontSize:14,display:'block',marginBottom:6}}>Email (we'll send your itinerary here)</label>
+            <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com"/>
+          </div>
+          <button onClick={handlePay} disabled={!email||processing} style={{width:'100%',padding:16,background:(!email||processing)?'rgba(255,255,255,.1)':'linear-gradient(to right,#f59e0b,#f97316)',color:(!email||processing)?'#666':'#000',fontWeight:700,border:'none',borderRadius:12,fontSize:14,cursor:(!email||processing)?'not-allowed':'pointer',fontFamily:'inherit'}}>
+            {processing ? 'Processing...' : `Pay $${tier.price} with PayPal`}
+          </button>
+        </div>
+        <div className="flex items-center justify-center gap-4 gray6" style={{fontSize:12,flexWrap:'wrap'}}>
+          <span className="flex items-center gap-1">
+            <svg style={{width:12,height:12}} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
+            Secure checkout
+          </span>
+          <span>&middot;</span><span>Instant delivery</span><span>&middot;</span><span>Money-back guarantee</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ APP ============ */
+function App() {
+  const [view, setView] = useState("landing");
+  const [quizStep, setQuizStep] = useState(0);
+  const [quizAnswers, setQuizAnswers] = useState({});
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [waitlistDone, setWaitlistDone] = useState(false);
+
+  const handleQuizAnswer = (stepId, answer) => {
+    const updated = {...quizAnswers, [stepId]: answer};
+    setQuizAnswers(updated);
+    if (quizStep < QUIZ_STEPS.length - 1) {
+      setTimeout(() => setQuizStep(quizStep + 1), 300);
+    } else {
+      // Submit quiz to backend
+      fetch(API_BASE + '/api/quiz/submit', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(updated)
+      }).catch(() => {});
+      setView("pricing");
+    }
+  };
+
+  const handleWaitlist = (email) => {
+    fetch(API_BASE + '/api/waitlist', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email })
+    }).catch(() => {});
+    setWaitlistDone(true);
+  };
+
+  if (view === "quiz") return <Quiz step={quizStep} answers={quizAnswers} onAnswer={handleQuizAnswer} onBack={()=> quizStep > 0 ? setQuizStep(quizStep-1) : setView("landing")} />;
+  if (view === "pricing") return <Pricing answers={quizAnswers} onSelect={(t)=>{setSelectedTier(t);setView("checkout")}} onBack={()=>{setView("quiz");setQuizStep(QUIZ_STEPS.length-1)}} />;
+  if (view === "checkout") return <Checkout tier={selectedTier} onBack={()=>setView("pricing")} />;
+  return <Landing onStart={()=>setView("quiz")} onWaitlist={handleWaitlist} waitlistDone={waitlistDone} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
