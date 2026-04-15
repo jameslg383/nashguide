@@ -38,16 +38,6 @@ def health():
     return {"ok": True, "service": "nashguide-ai"}
 
 
-@app.get("/")
-def root():
-    return {
-        "service": "NashGuide AI",
-        "tagline": "Your personalized Nashville trip, planned by a local who happens to be an AI.",
-        "endpoints": ["/api/quiz/start", "/api/quiz/submit", "/api/payment/create", "/api/payment/capture", "/blog", "/trip/{slug}"],
-    }
-
-from fastapi.responses import FileResponse
-
 @app.get("/", include_in_schema=False)
 async def root():
     return FileResponse(str(static_dir / "index.html"))
