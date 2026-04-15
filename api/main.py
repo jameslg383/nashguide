@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from api.models.database import init_db
-from api.routes import quiz, payment, trip, blog, admin, waitlist
+from api.routes import quiz, payment, trip, blog, admin, waitlist, analytics
 
 app = FastAPI(title="NashGuide AI", version="0.1.0")
 
@@ -26,6 +26,7 @@ app.include_router(trip.router)
 app.include_router(blog.router)
 app.include_router(waitlist.router)
 app.include_router(admin.router)
+app.include_router(analytics.router)
 
 
 @app.on_event("startup")

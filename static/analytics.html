@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NashGuide Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #08080c;
+  --surface: #111118;
+  --surface2: #1a1a24;
+  --border: #252530;
+  --text: #e4e4ef;
+  --muted: #6b6b80;
+  --accent: #22d3ee;
+  --accent2: #a78bfa;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --orange: #fb923c;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif; min-height:100vh; }
+.mono { font-family:'JetBrains Mono',monospace; }
+
+/* Layout */
+.header { padding:20px 32px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:var(--bg); z-index:100; backdrop-filter:blur(20px); }
+.header h1 { font-size:20px; font-weight:600; display:flex; align-items:center; gap:10px; }
+.header h1 span { color:var(--accent); font-size:12px; font-weight:500; background:rgba(34,211,238,.1); padding:2px 8px; border-radius:4px; }
+.controls { display:flex; gap:8px; }
+.controls button { padding:6px 14px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-family:inherit; font-size:13px; cursor:pointer; transition:all .2s; }
+.controls button:hover { border-color:var(--accent); color:var(--text); }
+.controls button.active { background:rgba(34,211,238,.1); border-color:var(--accent); color:var(--accent); }
+
+.grid { display:grid; gap:16px; padding:24px 32px; }
+.grid-4 { grid-template-columns:repeat(4,1fr); }
+.grid-3 { grid-template-columns:repeat(3,1fr); }
+.grid-2 { grid-template-columns:repeat(2,1fr); }
+.grid-12 { grid-template-columns:8fr 4fr; }
+
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.card-title { font-size:13px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:1px; }
+.big-number { font-size:36px; font-weight:700; letter-spacing:-1px; }
+.big-number.accent { color:var(--accent); }
+.big-number.green { color:var(--green); }
+.big-number.amber { color:var(--amber); }
+.big-number.purple { color:var(--accent2); }
+.subtitle { font-size:12px; color:var(--muted); margin-top:4px; }
+
+/* Funnel */
+.funnel-step { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.funnel-step:last-child { border:none; }
+.funnel-bar { flex:1; height:28px; background:var(--surface2); border-radius:6px; position:relative; overflow:hidden; }
+.funnel-fill { height:100%; border-radius:6px; transition:width .8s ease; display:flex; align-items:center; padding-left:10px; font-size:12px; font-weight:600; }
+.funnel-label { width:140px; font-size:13px; flex-shrink:0; }
+.funnel-count { width:60px; text-align:right; font-size:13px; font-weight:600; flex-shrink:0; }
+.funnel-pct { width:50px; text-align:right; font-size:12px; color:var(--muted); flex-shrink:0; }
+
+/* Table */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th { text-align:left; padding:8px 12px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); }
+.data-table td { padding:8px 12px; font-size:13px; border-bottom:1px solid rgba(255,255,255,.03); }
+.data-table tr:hover td { background:rgba(255,255,255,.02); }
+
+/* Live feed */
+.feed-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.03); font-size:13px; }
+.feed-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.feed-dot.page_view { background:var(--accent); }
+.feed-dot.quiz_start { background:var(--amber); }
+.feed-dot.quiz_step { background:var(--orange); }
+.feed-dot.quiz_complete { background:var(--green); }
+.feed-dot.click { background:var(--muted); }
+.feed-dot.scroll_depth { background:var(--accent2); }
+.feed-dot.payment_start { background:var(--amber); }
+.feed-dot.payment_success { background:var(--green); }
+.feed-dot.waitlist_signup { background:var(--accent); }
+.feed-time { color:var(--muted); font-size:11px; flex-shrink:0; width:70px; }
+.feed-type { font-weight:500; width:130px; flex-shrink:0; }
+.feed-detail { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Pie segments */
+.segment-row { display:flex; align-items:center; gap:10px; padding:6px 0; }
+.segment-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+.segment-label { flex:1; font-size:13px; }
+.segment-value { font-size:13px; font-weight:600; }
+.segment-pct { font-size:12px; color:var(--muted); width:45px; text-align:right; }
+
+/* Loading */
+.loading { display:flex; align-items:center; justify-content:center; min-height:400px; color:var(--muted); font-size:14px; }
+.pulse { animation:pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+/* Responsive */
+@media(max-width:1200px) { .grid-4{grid-template-columns:repeat(2,1fr)} .grid-12{grid-template-columns:1fr} }
+@media(max-width:768px) { .grid-4,.grid-3,.grid-2{grid-template-columns:1fr} .header{flex-direction:column;gap:12px} .grid{padding:16px} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3" stroke="var(--accent)"/></svg>
+    NashGuide Analytics <span>LIVE</span>
+  </h1>
+  <div class="controls" id="periodControls">
+    <button data-period="24h">24h</button>
+    <button data-period="7d" class="active">7d</button>
+    <button data-period="30d">30d</button>
+    <button data-period="90d">90d</button>
+    <button data-period="all">All</button>
+    <button onclick="loadData()" style="border-color:var(--accent);color:var(--accent)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M21 12a9 9 0 11-6.219-8.56"/><path d="M21 3v5h-5"/></svg>
+    </button>
+  </div>
+</div>
+
+<div id="dashboard">
+  <div class="loading"><span class="pulse">Loading analytics data...</span></div>
+</div>
+
+<script>
+const ADMIN_KEY = new URLSearchParams(window.location.search).get('key');
+const API = window.location.origin;
+let currentPeriod = '7d';
+let chartInstances = {};
+
+// Period controls
+document.querySelectorAll('#periodControls button[data-period]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#periodControls button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPeriod = btn.dataset.period;
+    loadData();
+  });
+});
+
+const COLORS = ['#22d3ee','#a78bfa','#34d399','#fbbf24','#f87171','#fb923c','#818cf8','#2dd4bf','#f472b6','#a3e635'];
+
+async function loadData() {
+  try {
+    const res = await fetch(`${API}/api/analytics/data?key=${ADMIN_KEY}&period=${currentPeriod}`);
+    const data = await res.json();
+    if (data.error) {
+      document.getElementById('dashboard').innerHTML = `<div class="loading" style="color:var(--red)">${data.error}</div>`;
+      return;
+    }
+    renderDashboard(data);
+  } catch(e) {
+    document.getElementById('dashboard').innerHTML = `<div class="loading" style="color:var(--red)">Failed to load: ${e.message}</div>`;
+  }
+}
+
+function renderDashboard(data) {
+  const o = data.overview;
+  const convRate = o.unique_visitors > 0 ? ((data.funnel.find(f=>f.step==='payment_success')?.visitors||0) / o.unique_visitors * 100).toFixed(1) : '0';
+  
+  document.getElementById('dashboard').innerHTML = `
+    <!-- KPI Cards -->
+    <div class="grid grid-4">
+      <div class="card">
+        <div class="card-title">Unique Visitors</div>
+        <div class="big-number accent">${o.unique_visitors.toLocaleString()}</div>
+        <div class="subtitle">${o.total_sessions.toLocaleString()} sessions</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Total Events</div>
+        <div class="big-number purple">${o.total_events.toLocaleString()}</div>
+        <div class="subtitle">${o.unique_ips.toLocaleString()} unique IPs</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Avg Time on Page</div>
+        <div class="big-number amber">${formatTime(data.avg_time_on_page)}</div>
+        <div class="subtitle">seconds avg</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Conversion Rate</div>
+        <div class="big-number green">${convRate}%</div>
+        <div class="subtitle">${data.waitlist_signups} waitlist signups</div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-12">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Traffic Over Time</div></div>
+        <canvas id="trafficChart" height="200"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Events Breakdown</div></div>
+        <canvas id="eventsChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Funnel -->
+    <div class="grid" style="grid-template-columns:1fr">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Conversion Funnel</div></div>
+        <div id="funnelContainer"></div>
+      </div>
+    </div>
+
+    <!-- Device / Source / Clicks -->
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Devices</div></div>
+        <div id="devicesContainer"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Browsers</div></div>
+        <div id="browsersContainer"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Operating Systems</div></div>
+        <div id="osContainer"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Top Referrers</div></div>
+        <div id="referrersContainer"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Top Clicked Elements</div></div>
+        <div id="clicksContainer"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Scroll Depth</div></div>
+        <canvas id="scrollChart" height="160"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Quiz Answer Breakdown</div></div>
+        <div id="quizContainer" style="max-height:300px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <!-- Live Feed -->
+    <div class="grid" style="grid-template-columns:1fr">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Live Event Feed</div><div class="card-title" style="color:var(--green)">Latest 50</div></div>
+        <div id="feedContainer" style="max-height:400px;overflow-y:auto"></div>
+      </div>
+    </div>
+  `;
+
+  renderTrafficChart(data.time_series);
+  renderEventsChart(data.events_by_type);
+  renderFunnel(data.funnel);
+  renderSegments('devicesContainer', data.devices, 'device', 'visitors');
+  renderSegments('browsersContainer', data.browsers, 'browser', 'visitors');
+  renderSegments('osContainer', data.os, 'os', 'visitors');
+  renderReferrers(data.referrers);
+  renderClicks(data.top_clicks);
+  renderScrollChart(data.scroll_depth);
+  renderQuizSteps(data.quiz_steps);
+  renderFeed(data.recent_events);
+}
+
+function formatTime(s) {
+  if (!s || s === 0) return '0s';
+  if (s < 60) return Math.round(s) + 's';
+  return Math.floor(s/60) + 'm ' + Math.round(s%60) + 's';
+}
+
+function renderTrafficChart(series) {
+  if (chartInstances.traffic) chartInstances.traffic.destroy();
+  const ctx = document.getElementById('trafficChart');
+  chartInstances.traffic = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: series.map(s => {
+        const d = new Date(s.period);
+        return currentPeriod === '24h' ? d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString([],{month:'short',day:'numeric'});
+      }),
+      datasets: [{
+        label: 'Page Views',
+        data: series.map(s => s.views),
+        borderColor: '#22d3ee',
+        backgroundColor: 'rgba(34,211,238,.1)',
+        fill: true,
+        tension: .4,
+        pointRadius: 3
+      },{
+        label: 'Unique Visitors',
+        data: series.map(s => s.visitors),
+        borderColor: '#a78bfa',
+        backgroundColor: 'rgba(167,139,250,.1)',
+        fill: true,
+        tension: .4,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#6b6b80', font: { family: 'Outfit' } } } },
+      scales: {
+        x: { ticks: { color: '#6b6b80', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,.03)' } },
+        y: { ticks: { color: '#6b6b80', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function renderEventsChart(events) {
+  if (chartInstances.events) chartInstances.events.destroy();
+  const ctx = document.getElementById('eventsChart');
+  const top = events.slice(0, 8);
+  chartInstances.events = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: top.map(e => e.type.replace(/_/g,' ')),
+      datasets: [{ data: top.map(e => e.count), backgroundColor: COLORS.slice(0, top.length), borderWidth: 0 }]
+    },
+    options: {
+      responsive: true,
+      cutout: '65%',
+      plugins: { legend: { position: 'right', labels: { color: '#6b6b80', font: { family: 'Outfit', size: 11 }, padding: 8 } } }
+    }
+  });
+}
+
+function renderFunnel(funnel) {
+  const container = document.getElementById('funnelContainer');
+  const maxVal = Math.max(...funnel.map(f => f.visitors), 1);
+  const labels = {
+    'page_view':'Visited Site','quiz_start':'Started Quiz','quiz_step':'Answered Step','quiz_complete':'Finished Quiz',
+    'tier_view':'Viewed Pricing','tier_select':'Selected Tier','checkout_start':'Started Checkout','payment_start':'Clicked Pay','payment_success':'Paid'
+  };
+  const colors = ['#22d3ee','#38bdf8','#818cf8','#a78bfa','#c084fc','#e879f9','#f472b6','#fb923c','#34d399'];
+  
+  container.innerHTML = funnel.map((f, i) => {
+    const pct = maxVal > 0 ? (f.visitors / maxVal * 100) : 0;
+    const dropoff = i > 0 && funnel[i-1].visitors > 0 ? ((1 - f.visitors / funnel[i-1].visitors) * 100).toFixed(0) : '';
+    return `
+      <div class="funnel-step">
+        <div class="funnel-label">${labels[f.step]||f.step}</div>
+        <div class="funnel-bar"><div class="funnel-fill" style="width:${Math.max(pct,2)}%;background:${colors[i]}">${f.visitors > 0 ? f.visitors : ''}</div></div>
+        <div class="funnel-count">${f.visitors}</div>
+        <div class="funnel-pct">${dropoff ? '-'+dropoff+'%' : ''}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSegments(containerId, data, labelKey, valueKey) {
+  const container = document.getElementById(containerId);
+  const total = data.reduce((s, d) => s + d[valueKey], 0) || 1;
+  container.innerHTML = data.map((d, i) => `
+    <div class="segment-row">
+      <div class="segment-dot" style="background:${COLORS[i%COLORS.length]}"></div>
+      <div class="segment-label">${d[labelKey]}</div>
+      <div class="segment-value">${d[valueKey]}</div>
+      <div class="segment-pct">${(d[valueKey]/total*100).toFixed(0)}%</div>
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:13px">No data yet</div>';
+}
+
+function renderReferrers(refs) {
+  const container = document.getElementById('referrersContainer');
+  container.innerHTML = refs.length ? `<table class="data-table"><thead><tr><th>Source</th><th style="text-align:right">Visitors</th></tr></thead><tbody>${
+    refs.map(r => `<tr><td class="mono" style="font-size:12px">${r.referrer}</td><td style="text-align:right;font-weight:600">${r.visitors}</td></tr>`).join('')
+  }</tbody></table>` : '<div style="color:var(--muted);font-size:13px">No data yet</div>';
+}
+
+function renderClicks(clicks) {
+  const container = document.getElementById('clicksContainer');
+  container.innerHTML = clicks.length ? `<table class="data-table"><thead><tr><th>Element</th><th style="text-align:right">Clicks</th></tr></thead><tbody>${
+    clicks.filter(c=>c.element).map(c => `<tr><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.element}</td><td style="text-align:right;font-weight:600">${c.clicks}</td></tr>`).join('')
+  }</tbody></table>` : '<div style="color:var(--muted);font-size:13px">No data yet</div>';
+}
+
+function renderScrollChart(scroll) {
+  if (chartInstances.scroll) chartInstances.scroll.destroy();
+  const ctx = document.getElementById('scrollChart');
+  chartInstances.scroll = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: scroll.map(s => s.depth + '%'),
+      datasets: [{ data: scroll.map(s => s.visitors), backgroundColor: scroll.map((_,i) => COLORS[i%COLORS.length]), borderRadius: 6, barThickness: 40 }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#6b6b80' }, grid: { display: false } },
+        y: { ticks: { color: '#6b6b80' }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function renderQuizSteps(steps) {
+  const container = document.getElementById('quizContainer');
+  if (!steps.length) { container.innerHTML = '<div style="color:var(--muted);font-size:13px">No quiz data yet</div>'; return; }
+  const grouped = {};
+  steps.forEach(s => { if(!grouped[s.step]) grouped[s.step]=[]; grouped[s.step].push(s); });
+  container.innerHTML = Object.entries(grouped).map(([step, answers]) => `
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;color:var(--accent);margin-bottom:6px;font-weight:600">Step ${step}</div>
+      ${answers.map(a => `
+        <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px">
+          <span>${a.answer||'(empty)'}</span><span style="font-weight:600">${a.count}</span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function renderFeed(events) {
+  const container = document.getElementById('feedContainer');
+  container.innerHTML = events.map(e => {
+    const time = e.time ? new Date(e.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '';
+    const type = e.type.replace(/_/g, ' ');
+    let detail = e.ip || '';
+    try {
+      const d = JSON.parse(e.data || '{}');
+      if (d.traffic_source?.referrer_domain) detail = d.traffic_source.referrer_domain;
+      if (d.step_answer) detail = d.step_answer;
+      if (d.tier_id) detail = d.tier_id;
+      if (d.element_text) detail = d.element_text.substring(0,40);
+      if (d.depth_pct) detail = d.depth_pct + '% scrolled';
+      if (d.time_on_page_seconds) detail = d.time_on_page_seconds + 's on page';
+    } catch(ex) {}
+    return `
+      <div class="feed-item">
+        <div class="feed-dot ${e.type}"></div>
+        <div class="feed-time mono">${time}</div>
+        <div class="feed-type">${type}</div>
+        <div class="feed-detail">${e.visitor} &middot; ${detail}</div>
+      </div>
+    `;
+  }).join('') || '<div style="color:var(--muted);font-size:13px;padding:20px 0">No events yet. Visit the landing page to generate data.</div>';
+}
+
+// Auto-refresh every 30 seconds
+loadData();
+setInterval(loadData, 30000);
+</script>
+</body>
+</html>

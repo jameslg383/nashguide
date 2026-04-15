@@ -41,5 +41,10 @@ class Settings(BaseSettings):
             else "https://api-m.sandbox.paypal.com"
         )
 
+    @property
+    def admin_key(self) -> str:
+        """Lowercase alias for ADMIN_KEY env var."""
+        return self.ADMIN_KEY
+
 
 settings = Settings()
