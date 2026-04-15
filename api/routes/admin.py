@@ -18,7 +18,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 def require_admin(key: str = Query(...)):
-    if key != settings.ADMIN_KEY:
+    if key != settings.admin_key:
         raise HTTPException(401, "Invalid admin key")
     return True
 
@@ -39,10 +39,10 @@ def dashboard(_: bool = Depends(require_admin), db: Session = Depends(get_db)):
       <li>Revenue: <b>${revenue:.2f}</b></li>
       <li>Conversion: <b>{conv:.1f}%</b></li>
     </ul>
-    <p><a href='/admin/orders?key={settings.ADMIN_KEY}'>Orders</a> |
-       <a href='/admin/venues?key={settings.ADMIN_KEY}'>Venues</a> |
-       <a href='/admin/content?key={settings.ADMIN_KEY}'>Content</a> |
-       <a href='/admin/orders.csv?key={settings.ADMIN_KEY}'>Export CSV</a></p>
+    <p><a href='/admin/orders?key={settings.admin_key}'>Orders</a> |
+       <a href='/admin/venues?key={settings.admin_key}'>Venues</a> |
+       <a href='/admin/content?key={settings.admin_key}'>Content</a> |
+       <a href='/admin/orders.csv?key={settings.admin_key}'>Export CSV</a></p>
     </body></html>"""
 
 

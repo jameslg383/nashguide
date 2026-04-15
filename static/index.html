@@ -396,7 +396,7 @@ function Checkout({ tier, onBack }) {
 
   const handlePay = async () => {
     if (!email) return;
-    window.ngTrack && window.ngTrack.paymentStart(tier.id, tier.price);
+    if(window.ngTrack)window.ngTrack.paymentStart(tier.id, tier.price);
     setProcessing(true);
     try {
       // Create payment
@@ -456,25 +456,25 @@ function App() {
   const [waitlistDone, setWaitlistDone] = useState(false);
 
   const handleQuizAnswer = (stepId, answer) => {
-    window.ngTrack && window.ngTrack.quizStep(quizStep + 1, answer);
+    if(window.ngTrack)window.ngTrack.quizStep(quizStep, answer);
     const updated = {...quizAnswers, [stepId]: answer};
     setQuizAnswers(updated);
     if (quizStep < QUIZ_STEPS.length - 1) {
       setTimeout(() => setQuizStep(quizStep + 1), 300);
     } else {
-      window.ngTrack && window.ngTrack.quizComplete(updated);
+      if(window.ngTrack)window.ngTrack.quizComplete(updated);
       // Submit quiz to backend
       fetch(API_BASE + '/api/quiz/submit', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify(updated)
       }).catch(() => {});
-      window.ngTrack && window.ngTrack.tierView();
+      if(window.ngTrack)window.ngTrack.tierView();
       setView("pricing");
     }
   };
 
   const handleWaitlist = (email) => {
-    window.ngTrack && window.ngTrack.waitlistSignup(email);
+    if(window.ngTrack)window.ngTrack.waitlistSignup(email);
     fetch(API_BASE + '/api/waitlist', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ email })
@@ -483,19 +483,19 @@ function App() {
   };
 
   const startQuiz = () => {
-    window.ngTrack && window.ngTrack.quizStart();
+    if(window.ngTrack)window.ngTrack.quizStart();
     setView("quiz");
   };
 
   const selectTier = (t) => {
-    window.ngTrack && window.ngTrack.tierSelect(t.id, t.price);
-    window.ngTrack && window.ngTrack.checkoutStart(t.id, t.price);
+    if(window.ngTrack)window.ngTrack.tierSelect(t.id, t.price);
+    if(window.ngTrack)window.ngTrack.checkoutStart(t.id, t.price);
     setSelectedTier(t);
     setView("checkout");
   };
 
   const backToPricing = () => {
-    window.ngTrack && window.ngTrack.tierView();
+    if(window.ngTrack)window.ngTrack.tierView();
     setView("pricing");
   };
 

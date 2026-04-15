@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     GOOGLE_MAPS_API_KEY: str = ""
 
     SECRET_KEY: str = "dev-secret"
-    ADMIN_KEY: str = "dev-admin"
+    admin_key: str = "dev-admin"  # reads ADMIN_KEY env var (case-insensitive)
     SITE_URL: str = "http://localhost:8080"
 
     MARKETING_ENABLED: bool = True
@@ -41,10 +41,6 @@ class Settings(BaseSettings):
             else "https://api-m.sandbox.paypal.com"
         )
 
-    @property
-    def admin_key(self) -> str:
-        """Lowercase alias for ADMIN_KEY env var."""
-        return self.ADMIN_KEY
 
 
 settings = Settings()

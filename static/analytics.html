@@ -3,444 +3,369 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>NashGuide Analytics</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<title>NashGuide Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root {
-  --bg: #08080c;
-  --surface: #111118;
-  --surface2: #1a1a24;
-  --border: #252530;
-  --text: #e4e4ef;
-  --muted: #6b6b80;
-  --accent: #22d3ee;
-  --accent2: #a78bfa;
-  --green: #34d399;
-  --amber: #fbbf24;
-  --red: #f87171;
-  --orange: #fb923c;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif; min-height:100vh; }
-.mono { font-family:'JetBrains Mono',monospace; }
+:root{--bg:#06060a;--s1:#0d0d14;--s2:#14141e;--s3:#1c1c2a;--brd:#252535;--brd2:#333348;--t1:#eeeef5;--t2:#a0a0b8;--t3:#6b6b82;--accent:#22d3ee;--accent-bg:rgba(34,211,238,.08);--purple:#a78bfa;--green:#34d399;--amber:#fbbf24;--red:#f87171;--orange:#fb923c;--pink:#f472b6;--lime:#a3e635}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden}
+.mono{font-family:'JetBrains Mono',monospace}
+::selection{background:var(--accent);color:#000}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--s1)}
+::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px}
 
-/* Layout */
-.header { padding:20px 32px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:var(--bg); z-index:100; backdrop-filter:blur(20px); }
-.header h1 { font-size:20px; font-weight:600; display:flex; align-items:center; gap:10px; }
-.header h1 span { color:var(--accent); font-size:12px; font-weight:500; background:rgba(34,211,238,.1); padding:2px 8px; border-radius:4px; }
-.controls { display:flex; gap:8px; }
-.controls button { padding:6px 14px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-family:inherit; font-size:13px; cursor:pointer; transition:all .2s; }
-.controls button:hover { border-color:var(--accent); color:var(--text); }
-.controls button.active { background:rgba(34,211,238,.1); border-color:var(--accent); color:var(--accent); }
+.header{padding:16px 24px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(6,6,10,.92);backdrop-filter:blur(20px);z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700}
+.logo .badge{font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-bg);padding:2px 8px;border-radius:4px;letter-spacing:1px}
+.nav{display:flex;gap:4px}
+.nav a{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;transition:all .2s;text-decoration:none}
+.nav a:hover{color:var(--t1);background:var(--s2)}
+.nav a.active{color:var(--accent);background:var(--accent-bg)}
+.controls{display:flex;gap:6px;align-items:center}
+.btn{padding:6px 14px;border-radius:6px;border:1px solid var(--brd);background:var(--s1);color:var(--t3);font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s}
+.btn:hover{border-color:var(--accent);color:var(--t1)}
+.btn.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.danger.active{background:rgba(248,113,113,.1)}
+.toggle{position:relative;width:40px;height:22px;background:var(--s3);border-radius:11px;cursor:pointer;transition:.2s}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s}
+.toggle.on::after{left:21px}
 
-.grid { display:grid; gap:16px; padding:24px 32px; }
-.grid-4 { grid-template-columns:repeat(4,1fr); }
-.grid-3 { grid-template-columns:repeat(3,1fr); }
-.grid-2 { grid-template-columns:repeat(2,1fr); }
-.grid-12 { grid-template-columns:8fr 4fr; }
+.page{display:none;padding:20px 24px}
+.page.active{display:block}
 
-.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; }
-.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-.card-title { font-size:13px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:1px; }
-.big-number { font-size:36px; font-weight:700; letter-spacing:-1px; }
-.big-number.accent { color:var(--accent); }
-.big-number.green { color:var(--green); }
-.big-number.amber { color:var(--amber); }
-.big-number.purple { color:var(--accent2); }
-.subtitle { font-size:12px; color:var(--muted); margin-top:4px; }
+.grid{display:grid;gap:14px;margin-bottom:14px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g73{grid-template-columns:7fr 3fr}
+.g37{grid-template-columns:3fr 7fr}
+.g1{grid-template-columns:1fr}
 
-/* Funnel */
-.funnel-step { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
-.funnel-step:last-child { border:none; }
-.funnel-bar { flex:1; height:28px; background:var(--surface2); border-radius:6px; position:relative; overflow:hidden; }
-.funnel-fill { height:100%; border-radius:6px; transition:width .8s ease; display:flex; align-items:center; padding-left:10px; font-size:12px; font-weight:600; }
-.funnel-label { width:140px; font-size:13px; flex-shrink:0; }
-.funnel-count { width:60px; text-align:right; font-size:13px; font-weight:600; flex-shrink:0; }
-.funnel-pct { width:50px; text-align:right; font-size:12px; color:var(--muted); flex-shrink:0; }
+.card{background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:16px;transition:border-color .2s}
+.card:hover{border-color:var(--brd2)}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-t{font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:1.2px}
+.big{font-size:32px;font-weight:800;letter-spacing:-1px}
+.sub{font-size:11px;color:var(--t3);margin-top:2px}
 
-/* Table */
-.data-table { width:100%; border-collapse:collapse; }
-.data-table th { text-align:left; padding:8px 12px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); }
-.data-table td { padding:8px 12px; font-size:13px; border-bottom:1px solid rgba(255,255,255,.03); }
-.data-table tr:hover td { background:rgba(255,255,255,.02); }
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;padding:6px 10px;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--brd);font-weight:600}
+.tbl td{padding:6px 10px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.02)}
+.tbl tr:hover td{background:rgba(255,255,255,.015)}
+.tbl .right{text-align:right}
+.tbl .mono{font-size:11px}
 
-/* Live feed */
-.feed-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.03); font-size:13px; }
-.feed-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.feed-dot.page_view { background:var(--accent); }
-.feed-dot.quiz_start { background:var(--amber); }
-.feed-dot.quiz_step { background:var(--orange); }
-.feed-dot.quiz_complete { background:var(--green); }
-.feed-dot.click { background:var(--muted); }
-.feed-dot.scroll_depth { background:var(--accent2); }
-.feed-dot.payment_start { background:var(--amber); }
-.feed-dot.payment_success { background:var(--green); }
-.feed-dot.waitlist_signup { background:var(--accent); }
-.feed-time { color:var(--muted); font-size:11px; flex-shrink:0; width:70px; }
-.feed-type { font-weight:500; width:130px; flex-shrink:0; }
-.feed-detail { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.tag-bot{background:rgba(248,113,113,.15);color:var(--red)}
+.tag-human{background:rgba(52,211,153,.15);color:var(--green)}
+.tag-ok{background:rgba(52,211,153,.15);color:var(--green)}
+.tag-pending{background:rgba(251,191,36,.15);color:var(--amber)}
+.tag-fail{background:rgba(248,113,113,.15);color:var(--red)}
 
-/* Pie segments */
-.segment-row { display:flex; align-items:center; gap:10px; padding:6px 0; }
-.segment-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
-.segment-label { flex:1; font-size:13px; }
-.segment-value { font-size:13px; font-weight:600; }
-.segment-pct { font-size:12px; color:var(--muted); width:45px; text-align:right; }
+.feed-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.02);font-size:12px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 
-/* Loading */
-.loading { display:flex; align-items:center; justify-content:center; min-height:400px; color:var(--muted); font-size:14px; }
-.pulse { animation:pulse 1.5s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+.funnel-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.funnel-row:last-child{border:none}
+.funnel-lbl{width:120px;font-size:12px;flex-shrink:0}
+.funnel-bar{flex:1;height:26px;background:var(--s2);border-radius:5px;overflow:hidden;position:relative}
+.funnel-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:600;transition:width .6s ease}
+.funnel-n{width:50px;text-align:right;font-size:12px;font-weight:700;flex-shrink:0}
+.funnel-d{width:50px;text-align:right;font-size:11px;color:var(--t3);flex-shrink:0}
 
-/* Responsive */
-@media(max-width:1200px) { .grid-4{grid-template-columns:repeat(2,1fr)} .grid-12{grid-template-columns:1fr} }
-@media(max-width:768px) { .grid-4,.grid-3,.grid-2{grid-template-columns:1fr} .header{flex-direction:column;gap:12px} .grid{padding:16px} }
+.seg-row{display:flex;align-items:center;gap:8px;padding:5px 0}
+.seg-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
+.seg-lbl{flex:1;font-size:12px}
+.seg-v{font-size:12px;font-weight:600;width:40px;text-align:right}
+.seg-p{font-size:11px;color:var(--t3);width:40px;text-align:right}
+
+.expand-btn{background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;font-family:inherit;padding:2px 6px}
+.expand-btn:hover{text-decoration:underline}
+
+.search{padding:8px 14px;border-radius:6px;border:1px solid var(--brd);background:var(--s2);color:var(--t1);font-family:inherit;font-size:12px;outline:none;width:200px}
+.search:focus{border-color:var(--accent)}
+.search::placeholder{color:var(--t3)}
+
+.loading{display:flex;align-items:center;justify-content:center;min-height:300px;color:var(--t3);font-size:13px}
+.pulse{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+.scroll-y{max-height:400px;overflow-y:auto}
+
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g73,.g37{grid-template-columns:1fr}}
+@media(max-width:700px){.g4,.g3,.g2{grid-template-columns:1fr}.header{flex-wrap:wrap;gap:8px}}
 </style>
 </head>
 <body>
-
 <div class="header">
-  <h1>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3" stroke="var(--accent)"/></svg>
-    NashGuide Analytics <span>LIVE</span>
-  </h1>
-  <div class="controls" id="periodControls">
-    <button data-period="24h">24h</button>
-    <button data-period="7d" class="active">7d</button>
-    <button data-period="30d">30d</button>
-    <button data-period="90d">90d</button>
-    <button data-period="all">All</button>
-    <button onclick="loadData()" style="border-color:var(--accent);color:var(--accent)">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M21 12a9 9 0 11-6.219-8.56"/><path d="M21 3v5h-5"/></svg>
-    </button>
+  <div class="logo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+    NashGuide <span class="badge">COMMAND CENTER</span>
+  </div>
+  <div class="nav" id="nav">
+    <a class="active" data-page="overview">Overview</a>
+    <a data-page="visitors">Visitors</a>
+    <a data-page="ips">IPs</a>
+    <a data-page="funnel">Funnel</a>
+    <a data-page="live">Live Feed</a>
+    <a data-page="sales">Sales</a>
+  </div>
+  <div class="controls">
+    <input class="search" id="globalSearch" placeholder="Search visitors, IPs..."/>
+    <div id="botToggle" class="flex" style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);cursor:pointer">
+      <span>Bots</span><div class="toggle" id="botSwitch"></div>
+    </div>
+    <div id="periodBtns">
+      <button class="btn" data-p="24h">24h</button>
+      <button class="btn active" data-p="7d">7d</button>
+      <button class="btn" data-p="30d">30d</button>
+      <button class="btn" data-p="90d">90d</button>
+      <button class="btn" data-p="all">All</button>
+    </div>
+    <button class="btn" onclick="refresh()" title="Refresh">&#x21bb;</button>
   </div>
 </div>
 
-<div id="dashboard">
-  <div class="loading"><span class="pulse">Loading analytics data...</span></div>
-</div>
+<div id="overviewPage" class="page active"></div>
+<div id="visitorsPage" class="page"></div>
+<div id="ipsPage" class="page"></div>
+<div id="funnelPage" class="page"></div>
+<div id="livePage" class="page"></div>
+<div id="salesPage" class="page"></div>
 
 <script>
-const ADMIN_KEY = new URLSearchParams(window.location.search).get('key');
-const API = window.location.origin;
-let currentPeriod = '7d';
-let chartInstances = {};
+const K = new URLSearchParams(location.search).get('key');
+const API = location.origin;
+let period = '7d', showBots = false, D = null, SD = null, charts = {};
+const COLORS = ['#22d3ee','#a78bfa','#34d399','#fbbf24','#f87171','#fb923c','#818cf8','#2dd4bf','#f472b6','#a3e635'];
+const FNAMES = {page_view:'Visited',quiz_start:'Quiz Started',quiz_step:'Quiz Step',quiz_complete:'Quiz Done',tier_view:'Saw Pricing',tier_select:'Chose Tier',checkout_start:'Checkout',payment_start:'Pay Clicked',payment_success:'Paid'};
+const DOTS = {page_view:'var(--accent)',quiz_start:'var(--amber)',quiz_step:'var(--orange)',quiz_complete:'var(--green)',click:'var(--t3)',scroll_depth:'var(--purple)',payment_start:'var(--amber)',payment_success:'var(--green)',waitlist_signup:'var(--accent)',engaged_visitor:'var(--lime)',performance:'var(--pink)',page_exit:'var(--red)'};
 
-// Period controls
-document.querySelectorAll('#periodControls button[data-period]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#periodControls button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentPeriod = btn.dataset.period;
-    loadData();
-  });
+// Nav
+document.querySelectorAll('.nav a').forEach(a=>{
+  a.onclick=e=>{e.preventDefault();document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(a.dataset.page+'Page').classList.add('active');
+    if(a.dataset.page==='sales'&&!SD)loadSales();}
 });
 
-const COLORS = ['#22d3ee','#a78bfa','#34d399','#fbbf24','#f87171','#fb923c','#818cf8','#2dd4bf','#f472b6','#a3e635'];
+// Period
+document.querySelectorAll('#periodBtns .btn').forEach(b=>{b.onclick=()=>{document.querySelectorAll('#periodBtns .btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');period=b.dataset.p;refresh();}});
 
-async function loadData() {
-  try {
-    const res = await fetch(`${API}/api/analytics/data?key=${ADMIN_KEY}&period=${currentPeriod}`);
-    const data = await res.json();
-    if (data.error) {
-      document.getElementById('dashboard').innerHTML = `<div class="loading" style="color:var(--red)">${data.error}</div>`;
-      return;
-    }
-    renderDashboard(data);
-  } catch(e) {
-    document.getElementById('dashboard').innerHTML = `<div class="loading" style="color:var(--red)">Failed to load: ${e.message}</div>`;
-  }
+// Bot toggle
+document.getElementById('botToggle').onclick=()=>{showBots=!showBots;document.getElementById('botSwitch').classList.toggle('on',showBots);refresh();}
+
+async function refresh(){
+  const r=await fetch(`${API}/api/analytics/data?key=${K}&period=${period}&include_bots=${showBots}`);
+  D=await r.json();if(D.error){alert(D.error);return;}
+  renderOverview();renderVisitors();renderIPs();renderFunnel();renderLive();
 }
 
-function renderDashboard(data) {
-  const o = data.overview;
-  const convRate = o.unique_visitors > 0 ? ((data.funnel.find(f=>f.step==='payment_success')?.visitors||0) / o.unique_visitors * 100).toFixed(1) : '0';
-  
-  document.getElementById('dashboard').innerHTML = `
-    <!-- KPI Cards -->
-    <div class="grid grid-4">
-      <div class="card">
-        <div class="card-title">Unique Visitors</div>
-        <div class="big-number accent">${o.unique_visitors.toLocaleString()}</div>
-        <div class="subtitle">${o.total_sessions.toLocaleString()} sessions</div>
+function fmt(n){return n!=null?Number(n).toLocaleString():'0'}
+function fmtT(s){if(!s||s===0)return'0s';if(s<60)return Math.round(s)+'s';return Math.floor(s/60)+'m '+Math.round(s%60)+'s';}
+function pct(a,b){return b>0?(a/b*100).toFixed(1)+'%':'0%'}
+function ago(iso){if(!iso)return'';const d=new Date(iso),n=Date.now()-d.getTime(),m=Math.floor(n/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';}
+function short(s,n){return s&&s.length>n?s.substring(0,n)+'...':s||''}
+function tag(bot,type){return bot?`<span class="tag tag-bot">${type||'bot'}</span>`:`<span class="tag tag-human">human</span>`}
+
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function chartOpts(extra={}){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6b6b82',font:{family:'Outfit',size:11},padding:6}},...(extra.plugins||{})},scales:{x:{ticks:{color:'#6b6b82',font:{size:10}},grid:{color:'rgba(255,255,255,.03)'}},y:{ticks:{color:'#6b6b82',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true},...(extra.scales||{})}}}
+
+/* ============ OVERVIEW ============ */
+function renderOverview(){
+  const o=D.overview,b=D.bots,perf=D.performance||{};
+  const convR=o.unique_visitors>0?((D.funnel.find(f=>f.step==='payment_success')?.visitors||0)/o.unique_visitors*100).toFixed(1):'0';
+  document.getElementById('overviewPage').innerHTML=`
+    <div class="grid g4">
+      <div class="card"><div class="card-t">Unique Visitors</div><div class="big" style="color:var(--accent)">${fmt(o.unique_visitors)}</div><div class="sub">${fmt(o.total_sessions)} sessions</div></div>
+      <div class="card"><div class="card-t">Total Events</div><div class="big" style="color:var(--purple)">${fmt(o.total_events)}</div><div class="sub">${fmt(o.unique_ips)} unique IPs</div></div>
+      <div class="card"><div class="card-t">Avg Time on Page</div><div class="big" style="color:var(--amber)">${fmtT(D.avg_time_on_page)}</div><div class="sub">per session</div></div>
+      <div class="card"><div class="card-t">Conversion Rate</div><div class="big" style="color:var(--green)">${convR}%</div><div class="sub">${fmt(D.waitlist_signups)} waitlist signups</div></div>
+    </div>
+    <div class="grid g4">
+      <div class="card"><div class="card-t">Bot Traffic</div><div class="big" style="color:var(--red)">${fmt(b.total_events)}</div><div class="sub">${fmt(b.unique_ips)} bot IPs</div></div>
+      <div class="card"><div class="card-t">TTFB</div><div class="big mono" style="color:var(--lime);font-size:28px">${perf.ttfb||0}ms</div><div class="sub">time to first byte</div></div>
+      <div class="card"><div class="card-t">DOM Load</div><div class="big mono" style="color:var(--orange);font-size:28px">${perf.dom_load||0}ms</div><div class="sub">DOM content loaded</div></div>
+      <div class="card"><div class="card-t">Full Load</div><div class="big mono" style="color:var(--pink);font-size:28px">${perf.full_load||0}ms</div><div class="sub">window.onload</div></div>
+    </div>
+    <div class="grid g73">
+      <div class="card"><div class="card-h"><div class="card-t">Traffic Over Time</div></div><div style="height:220px"><canvas id="cTraffic"></canvas></div></div>
+      <div class="card"><div class="card-h"><div class="card-t">Events Breakdown</div></div><div style="height:220px"><canvas id="cEvents"></canvas></div></div>
+    </div>
+    <div class="grid g3">
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Devices</div><div id="dDevices"></div></div>
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Browsers</div><div id="dBrowsers"></div></div>
+      <div class="card"><div class="card-t" style="margin-bottom:10px">OS</div><div id="dOS"></div></div>
+    </div>
+    <div class="grid g3">
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Languages</div><div id="dLangs"></div></div>
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Timezones</div><div id="dTZ"></div></div>
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Screen Sizes</div><div id="dScreens"></div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Top Referrers</div><div id="dRefs"></div></div>
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Top Clicked Elements</div><div id="dClicks"></div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-h"><div class="card-t">Scroll Depth</div></div><div style="height:160px"><canvas id="cScroll"></canvas></div></div>
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Bot Types</div><div id="dBotTypes"></div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Pages</div><div id="dPages"></div></div>
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Quiz Answers</div><div id="dQuiz" class="scroll-y"></div></div>
+    </div>`;
+  // Charts
+  destroyChart('traffic');destroyChart('events');destroyChart('scroll');
+  const ts=D.time_series;
+  charts.traffic=new Chart(document.getElementById('cTraffic'),{type:'line',data:{labels:ts.map(s=>{const d=new Date(s.period);return period==='24h'?d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString([],{month:'short',day:'numeric'})}),datasets:[{label:'Views',data:ts.map(s=>s.views),borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,.08)',fill:true,tension:.4,pointRadius:2},{label:'Visitors',data:ts.map(s=>s.visitors),borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.08)',fill:true,tension:.4,pointRadius:2}]},options:chartOpts()});
+  const et=D.events_by_type.slice(0,8);
+  charts.events=new Chart(document.getElementById('cEvents'),{type:'doughnut',data:{labels:et.map(e=>e.type.replace(/_/g,' ')),datasets:[{data:et.map(e=>e.count),backgroundColor:COLORS.slice(0,et.length),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'right',labels:{color:'#6b6b82',font:{family:'Outfit',size:10},padding:6}}}}});
+  const sc=D.scroll_depth;
+  charts.scroll=new Chart(document.getElementById('cScroll'),{type:'bar',data:{labels:sc.map(s=>s.depth+'%'),datasets:[{data:sc.map(s=>s.visitors),backgroundColor:COLORS,borderRadius:4,barThickness:32}]},options:{...chartOpts(),plugins:{legend:{display:false}}}});
+  // Segments
+  segs('dDevices',D.devices,'device','visitors');segs('dBrowsers',D.browsers,'browser','visitors');segs('dOS',D.os,'os','visitors');
+  segs('dLangs',D.languages,'lang','visitors');segs('dTZ',D.timezones,'tz','visitors');segs('dScreens',D.screens,'size','visitors');
+  // Tables
+  refTbl('dRefs',D.referrers);clickTbl('dClicks',D.top_clicks);pageTbl('dPages',D.pages);botTbl('dBotTypes',D.bots.types);quizTbl('dQuiz',D.quiz_steps);
+}
+
+function segs(id,data,lk,vk){const el=document.getElementById(id);if(!data||!data.length){el.innerHTML='<div style="color:var(--t3);font-size:12px">No data</div>';return;}const tot=data.reduce((s,d)=>s+d[vk],0)||1;el.innerHTML=data.map((d,i)=>`<div class="seg-row"><div class="seg-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="seg-lbl">${d[lk]}</div><div class="seg-v">${d[vk]}</div><div class="seg-p">${(d[vk]/tot*100).toFixed(0)}%</div></div>`).join('');}
+function refTbl(id,data){const el=document.getElementById(id);el.innerHTML=data.length?`<table class="tbl"><thead><tr><th>Source</th><th class="right">Visitors</th></tr></thead><tbody>${data.map(r=>`<tr><td class="mono">${r.referrer}</td><td class="right" style="font-weight:600">${r.visitors}</td></tr>`).join('')}</tbody></table>`:'<div style="color:var(--t3);font-size:12px">No data</div>';}
+function clickTbl(id,data){const el=document.getElementById(id);const f=data.filter(c=>c.element);el.innerHTML=f.length?`<table class="tbl"><thead><tr><th>Element</th><th class="right">Clicks</th></tr></thead><tbody>${f.map(c=>`<tr><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.element}</td><td class="right" style="font-weight:600">${c.clicks}</td></tr>`).join('')}</tbody></table>`:'<div style="color:var(--t3);font-size:12px">No data</div>';}
+function pageTbl(id,data){const el=document.getElementById(id);el.innerHTML=data.length?`<table class="tbl"><thead><tr><th>Page</th><th class="right">Views</th><th class="right">Visitors</th></tr></thead><tbody>${data.map(p=>`<tr><td class="mono">${p.url}</td><td class="right">${p.views}</td><td class="right" style="font-weight:600">${p.visitors}</td></tr>`).join('')}</tbody></table>`:'<div style="color:var(--t3);font-size:12px">No data</div>';}
+function botTbl(id,data){const el=document.getElementById(id);el.innerHTML=data&&data.length?`<table class="tbl"><thead><tr><th>Bot Type</th><th class="right">Events</th><th class="right">IPs</th></tr></thead><tbody>${data.map(b=>`<tr><td>${b.type}</td><td class="right">${b.events}</td><td class="right">${b.ips}</td></tr>`).join('')}</tbody></table>`:'<div style="color:var(--t3);font-size:12px">No bots detected</div>';}
+function quizTbl(id,data){const el=document.getElementById(id);if(!data||!data.length){el.innerHTML='<div style="color:var(--t3);font-size:12px">No quiz data</div>';return;}const g={};data.forEach(s=>{if(!g[s.step])g[s.step]=[];g[s.step].push(s);});el.innerHTML=Object.entries(g).map(([step,answers])=>`<div style="margin-bottom:14px"><div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:4px">Step ${step}</div>${answers.map(a=>`<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px"><span>${a.answer||'(empty)'}</span><span style="font-weight:600">${a.count}</span></div>`).join('')}</div>`).join('');}
+
+/* ============ VISITORS ============ */
+function renderVisitors(){
+  const v=D.visitors;const search=document.getElementById('globalSearch').value.toLowerCase();
+  const filtered=search?v.filter(x=>(x.ip||'').includes(search)||(x.ua||'').toLowerCase().includes(search)||(x.id||'').includes(search)):v;
+  document.getElementById('visitorsPage').innerHTML=`
+    <div style="margin-bottom:12px;font-size:13px;color:var(--t3)">${filtered.length} visitors shown</div>
+    <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr>
+      <th>Visitor ID</th><th>IP</th><th>Type</th><th>Device</th><th>Sessions</th><th>Events</th><th>Pages</th><th>First Seen</th><th>Last Seen</th><th>User Agent</th>
+    </tr></thead><tbody>${filtered.map(v=>{
+      let dev='';try{const d=JSON.parse(v.ua);dev=d.device||'';}catch(e){dev=v.ua&&v.ua.includes('Mobile')?'mobile':'desktop';}
+      return `<tr>
+        <td class="mono" style="font-size:11px;color:var(--accent)">${v.id}</td>
+        <td class="mono" style="font-size:11px">${v.ip||'-'}</td>
+        <td>${tag(v.is_bot,v.bot_type)}</td>
+        <td style="font-size:11px">${dev}</td>
+        <td class="right">${v.sessions}</td>
+        <td class="right" style="font-weight:600">${v.events}</td>
+        <td class="right">${v.pageviews}</td>
+        <td style="font-size:11px;color:var(--t3)">${ago(v.first_seen)}</td>
+        <td style="font-size:11px;color:var(--t3)">${ago(v.last_seen)}</td>
+        <td style="font-size:10px;color:var(--t3);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(v.ua||'').replace(/"/g,'&quot;')}">${short(v.ua,60)}</td>
+      </tr>`;}).join('')}</tbody></table></div>`;
+}
+
+/* ============ IPs ============ */
+function renderIPs(){
+  const ips=D.ips;const search=document.getElementById('globalSearch').value.toLowerCase();
+  const filtered=search?ips.filter(x=>(x.ip||'').includes(search)):ips;
+  document.getElementById('ipsPage').innerHTML=`
+    <div style="margin-bottom:12px;font-size:13px;color:var(--t3)">${filtered.length} IPs</div>
+    <div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr>
+      <th>IP Address</th><th>Visitors</th><th>Sessions</th><th>Events</th><th>Pageviews</th><th>Type</th><th>First Seen</th><th>Last Seen</th>
+    </tr></thead><tbody>${filtered.map(ip=>`<tr>
+      <td class="mono" style="font-size:12px;color:var(--accent)">${ip.ip}</td>
+      <td class="right">${ip.visitors}</td>
+      <td class="right">${ip.sessions}</td>
+      <td class="right" style="font-weight:600">${ip.events}</td>
+      <td class="right">${ip.pageviews}</td>
+      <td>${ip.has_bot?'<span class="tag tag-bot">bot seen</span>':'<span class="tag tag-human">clean</span>'}</td>
+      <td style="font-size:11px;color:var(--t3)">${ago(ip.first_seen)}</td>
+      <td style="font-size:11px;color:var(--t3)">${ago(ip.last_seen)}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ============ FUNNEL ============ */
+function renderFunnel(){
+  const f=D.funnel;const mx=Math.max(...f.map(x=>x.visitors),1);
+  const colors=['#22d3ee','#38bdf8','#818cf8','#a78bfa','#c084fc','#e879f9','#f472b6','#fb923c','#34d399'];
+  document.getElementById('funnelPage').innerHTML=`<div class="card">${f.map((s,i)=>{
+    const w=Math.max(s.visitors/mx*100,3);const dr=i>0&&f[i-1].visitors>0?'-'+((1-s.visitors/f[i-1].visitors)*100).toFixed(0)+'%':'';
+    return `<div class="funnel-row"><div class="funnel-lbl">${FNAMES[s.step]||s.step}</div><div class="funnel-bar"><div class="funnel-fill" style="width:${w}%;background:${colors[i]}">${s.visitors>0?s.visitors:''}</div></div><div class="funnel-n">${s.visitors}</div><div class="funnel-d">${dr}</div></div>`;
+  }).join('')}</div>`;
+}
+
+/* ============ LIVE FEED ============ */
+function renderLive(){
+  const ev=D.recent_events;
+  document.getElementById('livePage').innerHTML=`<div class="card scroll-y" style="max-height:calc(100vh - 120px)">${ev.map(e=>{
+    const t=e.time?new Date(e.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
+    const type=e.type.replace(/_/g,' ');
+    let detail=e.ip||'';
+    try{const d=JSON.parse(e.data||'{}');
+      if(d.traffic_source?.referrer_domain)detail=d.traffic_source.referrer_domain;
+      if(d.step_answer)detail=d.step_answer;if(d.tier_id)detail='tier: '+d.tier_id;
+      if(d.element_text)detail=short(d.element_text,35);
+      if(d.depth_pct)detail=d.depth_pct+'% scroll';
+      if(d.time_on_page_seconds)detail=d.time_on_page_seconds+'s on page';
+      if(d.device_info?.device)detail+=(' · '+d.device_info.device);
+    }catch(ex){}
+    return `<div class="feed-item">
+      <div class="dot" style="background:${DOTS[e.type]||'var(--t3)'}"></div>
+      <div class="mono" style="font-size:10px;color:var(--t3);width:65px;flex-shrink:0">${t}</div>
+      <div style="width:120px;flex-shrink:0;font-weight:500">${type}</div>
+      <div class="mono" style="font-size:10px;color:var(--accent);width:90px;flex-shrink:0">${e.visitor}</div>
+      <div class="mono" style="font-size:10px;width:110px;flex-shrink:0">${e.ip||''}</div>
+      ${e.is_bot?'<span class="tag tag-bot" style="flex-shrink:0">'+(e.bot_type||'bot')+'</span>':''}
+      <div style="color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${detail}</div>
+    </div>`;}).join('')||'<div style="color:var(--t3);padding:20px;text-align:center">No events yet</div>'}</div>`;
+}
+
+/* ============ SALES ============ */
+async function loadSales(){
+  try{
+    const r=await fetch(`${API}/api/analytics/sales?key=${K}&period=${period}`);
+    SD=await r.json();renderSales();
+  }catch(e){document.getElementById('salesPage').innerHTML=`<div class="loading" style="color:var(--red)">${e.message}</div>`;}
+}
+
+function renderSales(){
+  if(!SD){document.getElementById('salesPage').innerHTML='<div class="loading">Loading sales...</div>';return;}
+  document.getElementById('salesPage').innerHTML=`
+    <div class="grid g4">
+      <div class="card"><div class="card-t">Total Revenue</div><div class="big" style="color:var(--green)">$${SD.total_revenue.toFixed(2)}</div></div>
+      <div class="card"><div class="card-t">Total Orders</div><div class="big" style="color:var(--accent)">${SD.total_orders}</div></div>
+      <div class="card"><div class="card-t">Avg Order</div><div class="big" style="color:var(--amber)">$${SD.total_orders>0?(SD.total_revenue/SD.total_orders).toFixed(2):'0'}</div></div>
+      <div class="card"><div class="card-t">Products</div><div class="big" style="color:var(--purple)">${SD.by_product.length}</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Revenue by Product</div>
+        ${SD.by_product.length?`<table class="tbl"><thead><tr><th>Product</th><th class="right">Sales</th><th class="right">Revenue</th></tr></thead><tbody>${SD.by_product.map(p=>`<tr><td style="font-weight:600">${p.product}</td><td class="right">${p.count}</td><td class="right" style="color:var(--green);font-weight:700">$${p.revenue.toFixed(2)}</td></tr>`).join('')}</tbody></table>`:'<div style="color:var(--t3);font-size:12px">No sales yet</div>'}
       </div>
-      <div class="card">
-        <div class="card-title">Total Events</div>
-        <div class="big-number purple">${o.total_events.toLocaleString()}</div>
-        <div class="subtitle">${o.unique_ips.toLocaleString()} unique IPs</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Avg Time on Page</div>
-        <div class="big-number amber">${formatTime(data.avg_time_on_page)}</div>
-        <div class="subtitle">seconds avg</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Conversion Rate</div>
-        <div class="big-number green">${convRate}%</div>
-        <div class="subtitle">${data.waitlist_signups} waitlist signups</div>
+      <div class="card"><div class="card-t" style="margin-bottom:10px">Order Status</div>
+        ${SD.by_status.length?`<table class="tbl"><thead><tr><th>Status</th><th class="right">Count</th><th class="right">Amount</th></tr></thead><tbody>${SD.by_status.map(s=>`<tr><td><span class="tag tag-${s.status==='completed'?'ok':s.status==='pending'?'pending':'fail'}">${s.status}</span></td><td class="right">${s.count}</td><td class="right">$${s.amount.toFixed(2)}</td></tr>`).join('')}</tbody></table>`:'<div style="color:var(--t3);font-size:12px">No orders</div>'}
       </div>
     </div>
-
-    <!-- Charts Row -->
-    <div class="grid grid-12">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Traffic Over Time</div></div>
-        <canvas id="trafficChart" height="200"></canvas>
+    <div class="grid g1">
+      <div class="card"><div class="card-h"><div class="card-t">All Orders</div><div class="card-t">${SD.orders.length} orders</div></div>
+        <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>ID</th><th>Product</th><th>Amount</th><th>Status</th><th>Email</th><th>PayPal ID</th><th>Date</th></tr></thead><tbody>
+        ${SD.orders.map(o=>`<tr>
+          <td class="mono" style="font-size:11px">${o.id}</td>
+          <td style="font-weight:600">${o.product||'-'}</td>
+          <td style="color:var(--green);font-weight:700">$${(o.amount||0).toFixed(2)}</td>
+          <td><span class="tag tag-${o.status==='completed'?'ok':o.status==='pending'?'pending':'fail'}">${o.status||'-'}</span></td>
+          <td class="mono" style="font-size:11px">${o.email||'-'}</td>
+          <td class="mono" style="font-size:10px;color:var(--t3)">${short(o.paypal_id,20)||'-'}</td>
+          <td style="font-size:11px;color:var(--t3)">${o.date?new Date(o.date).toLocaleString():'-'}</td>
+        </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:20px">No orders yet</td></tr>'}
+        </tbody></table></div>
       </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Events Breakdown</div></div>
-        <canvas id="eventsChart" height="200"></canvas>
-      </div>
-    </div>
-
-    <!-- Funnel -->
-    <div class="grid" style="grid-template-columns:1fr">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Conversion Funnel</div></div>
-        <div id="funnelContainer"></div>
-      </div>
-    </div>
-
-    <!-- Device / Source / Clicks -->
-    <div class="grid grid-3">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Devices</div></div>
-        <div id="devicesContainer"></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Browsers</div></div>
-        <div id="browsersContainer"></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Operating Systems</div></div>
-        <div id="osContainer"></div>
-      </div>
-    </div>
-
-    <div class="grid grid-2">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Top Referrers</div></div>
-        <div id="referrersContainer"></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Top Clicked Elements</div></div>
-        <div id="clicksContainer"></div>
-      </div>
-    </div>
-
-    <div class="grid grid-2">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Scroll Depth</div></div>
-        <canvas id="scrollChart" height="160"></canvas>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Quiz Answer Breakdown</div></div>
-        <div id="quizContainer" style="max-height:300px;overflow-y:auto"></div>
-      </div>
-    </div>
-
-    <!-- Live Feed -->
-    <div class="grid" style="grid-template-columns:1fr">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Live Event Feed</div><div class="card-title" style="color:var(--green)">Latest 50</div></div>
-        <div id="feedContainer" style="max-height:400px;overflow-y:auto"></div>
-      </div>
-    </div>
-  `;
-
-  renderTrafficChart(data.time_series);
-  renderEventsChart(data.events_by_type);
-  renderFunnel(data.funnel);
-  renderSegments('devicesContainer', data.devices, 'device', 'visitors');
-  renderSegments('browsersContainer', data.browsers, 'browser', 'visitors');
-  renderSegments('osContainer', data.os, 'os', 'visitors');
-  renderReferrers(data.referrers);
-  renderClicks(data.top_clicks);
-  renderScrollChart(data.scroll_depth);
-  renderQuizSteps(data.quiz_steps);
-  renderFeed(data.recent_events);
+    </div>`;
 }
 
-function formatTime(s) {
-  if (!s || s === 0) return '0s';
-  if (s < 60) return Math.round(s) + 's';
-  return Math.floor(s/60) + 'm ' + Math.round(s%60) + 's';
-}
+// Search
+document.getElementById('globalSearch').addEventListener('input',()=>{if(D){renderVisitors();renderIPs();}});
 
-function renderTrafficChart(series) {
-  if (chartInstances.traffic) chartInstances.traffic.destroy();
-  const ctx = document.getElementById('trafficChart');
-  chartInstances.traffic = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: series.map(s => {
-        const d = new Date(s.period);
-        return currentPeriod === '24h' ? d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString([],{month:'short',day:'numeric'});
-      }),
-      datasets: [{
-        label: 'Page Views',
-        data: series.map(s => s.views),
-        borderColor: '#22d3ee',
-        backgroundColor: 'rgba(34,211,238,.1)',
-        fill: true,
-        tension: .4,
-        pointRadius: 3
-      },{
-        label: 'Unique Visitors',
-        data: series.map(s => s.visitors),
-        borderColor: '#a78bfa',
-        backgroundColor: 'rgba(167,139,250,.1)',
-        fill: true,
-        tension: .4,
-        pointRadius: 3
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { labels: { color: '#6b6b80', font: { family: 'Outfit' } } } },
-      scales: {
-        x: { ticks: { color: '#6b6b80', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,.03)' } },
-        y: { ticks: { color: '#6b6b80', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true }
-      }
-    }
-  });
-}
-
-function renderEventsChart(events) {
-  if (chartInstances.events) chartInstances.events.destroy();
-  const ctx = document.getElementById('eventsChart');
-  const top = events.slice(0, 8);
-  chartInstances.events = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: top.map(e => e.type.replace(/_/g,' ')),
-      datasets: [{ data: top.map(e => e.count), backgroundColor: COLORS.slice(0, top.length), borderWidth: 0 }]
-    },
-    options: {
-      responsive: true,
-      cutout: '65%',
-      plugins: { legend: { position: 'right', labels: { color: '#6b6b80', font: { family: 'Outfit', size: 11 }, padding: 8 } } }
-    }
-  });
-}
-
-function renderFunnel(funnel) {
-  const container = document.getElementById('funnelContainer');
-  const maxVal = Math.max(...funnel.map(f => f.visitors), 1);
-  const labels = {
-    'page_view':'Visited Site','quiz_start':'Started Quiz','quiz_step':'Answered Step','quiz_complete':'Finished Quiz',
-    'tier_view':'Viewed Pricing','tier_select':'Selected Tier','checkout_start':'Started Checkout','payment_start':'Clicked Pay','payment_success':'Paid'
-  };
-  const colors = ['#22d3ee','#38bdf8','#818cf8','#a78bfa','#c084fc','#e879f9','#f472b6','#fb923c','#34d399'];
-  
-  container.innerHTML = funnel.map((f, i) => {
-    const pct = maxVal > 0 ? (f.visitors / maxVal * 100) : 0;
-    const dropoff = i > 0 && funnel[i-1].visitors > 0 ? ((1 - f.visitors / funnel[i-1].visitors) * 100).toFixed(0) : '';
-    return `
-      <div class="funnel-step">
-        <div class="funnel-label">${labels[f.step]||f.step}</div>
-        <div class="funnel-bar"><div class="funnel-fill" style="width:${Math.max(pct,2)}%;background:${colors[i]}">${f.visitors > 0 ? f.visitors : ''}</div></div>
-        <div class="funnel-count">${f.visitors}</div>
-        <div class="funnel-pct">${dropoff ? '-'+dropoff+'%' : ''}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderSegments(containerId, data, labelKey, valueKey) {
-  const container = document.getElementById(containerId);
-  const total = data.reduce((s, d) => s + d[valueKey], 0) || 1;
-  container.innerHTML = data.map((d, i) => `
-    <div class="segment-row">
-      <div class="segment-dot" style="background:${COLORS[i%COLORS.length]}"></div>
-      <div class="segment-label">${d[labelKey]}</div>
-      <div class="segment-value">${d[valueKey]}</div>
-      <div class="segment-pct">${(d[valueKey]/total*100).toFixed(0)}%</div>
-    </div>
-  `).join('') || '<div style="color:var(--muted);font-size:13px">No data yet</div>';
-}
-
-function renderReferrers(refs) {
-  const container = document.getElementById('referrersContainer');
-  container.innerHTML = refs.length ? `<table class="data-table"><thead><tr><th>Source</th><th style="text-align:right">Visitors</th></tr></thead><tbody>${
-    refs.map(r => `<tr><td class="mono" style="font-size:12px">${r.referrer}</td><td style="text-align:right;font-weight:600">${r.visitors}</td></tr>`).join('')
-  }</tbody></table>` : '<div style="color:var(--muted);font-size:13px">No data yet</div>';
-}
-
-function renderClicks(clicks) {
-  const container = document.getElementById('clicksContainer');
-  container.innerHTML = clicks.length ? `<table class="data-table"><thead><tr><th>Element</th><th style="text-align:right">Clicks</th></tr></thead><tbody>${
-    clicks.filter(c=>c.element).map(c => `<tr><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.element}</td><td style="text-align:right;font-weight:600">${c.clicks}</td></tr>`).join('')
-  }</tbody></table>` : '<div style="color:var(--muted);font-size:13px">No data yet</div>';
-}
-
-function renderScrollChart(scroll) {
-  if (chartInstances.scroll) chartInstances.scroll.destroy();
-  const ctx = document.getElementById('scrollChart');
-  chartInstances.scroll = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: scroll.map(s => s.depth + '%'),
-      datasets: [{ data: scroll.map(s => s.visitors), backgroundColor: scroll.map((_,i) => COLORS[i%COLORS.length]), borderRadius: 6, barThickness: 40 }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: '#6b6b80' }, grid: { display: false } },
-        y: { ticks: { color: '#6b6b80' }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true }
-      }
-    }
-  });
-}
-
-function renderQuizSteps(steps) {
-  const container = document.getElementById('quizContainer');
-  if (!steps.length) { container.innerHTML = '<div style="color:var(--muted);font-size:13px">No quiz data yet</div>'; return; }
-  const grouped = {};
-  steps.forEach(s => { if(!grouped[s.step]) grouped[s.step]=[]; grouped[s.step].push(s); });
-  container.innerHTML = Object.entries(grouped).map(([step, answers]) => `
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;color:var(--accent);margin-bottom:6px;font-weight:600">Step ${step}</div>
-      ${answers.map(a => `
-        <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px">
-          <span>${a.answer||'(empty)'}</span><span style="font-weight:600">${a.count}</span>
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
-}
-
-function renderFeed(events) {
-  const container = document.getElementById('feedContainer');
-  container.innerHTML = events.map(e => {
-    const time = e.time ? new Date(e.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '';
-    const type = e.type.replace(/_/g, ' ');
-    let detail = e.ip || '';
-    try {
-      const d = JSON.parse(e.data || '{}');
-      if (d.traffic_source?.referrer_domain) detail = d.traffic_source.referrer_domain;
-      if (d.step_answer) detail = d.step_answer;
-      if (d.tier_id) detail = d.tier_id;
-      if (d.element_text) detail = d.element_text.substring(0,40);
-      if (d.depth_pct) detail = d.depth_pct + '% scrolled';
-      if (d.time_on_page_seconds) detail = d.time_on_page_seconds + 's on page';
-    } catch(ex) {}
-    return `
-      <div class="feed-item">
-        <div class="feed-dot ${e.type}"></div>
-        <div class="feed-time mono">${time}</div>
-        <div class="feed-type">${type}</div>
-        <div class="feed-detail">${e.visitor} &middot; ${detail}</div>
-      </div>
-    `;
-  }).join('') || '<div style="color:var(--muted);font-size:13px;padding:20px 0">No events yet. Visit the landing page to generate data.</div>';
-}
-
-// Auto-refresh every 30 seconds
-loadData();
-setInterval(loadData, 30000);
+// Init
+refresh();
+setInterval(()=>{refresh();if(SD)loadSales();},30000);
 </script>
 </body>
 </html>
