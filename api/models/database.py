@@ -22,5 +22,12 @@ def get_db():
 
 def init_db():
     # Import all models so metadata sees them
-    from api.models import customer, order, venue, itinerary, content  # noqa: F401
+    from api.models import (  # noqa: F401
+        customer,
+        order,
+        venue,
+        itinerary,
+        content,
+        analytics_event,
+    )
     Base.metadata.create_all(bind=engine)
