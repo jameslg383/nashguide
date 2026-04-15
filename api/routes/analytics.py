@@ -420,7 +420,8 @@ async def sales_data(key: str = Query(...), period: str = Query("all")):
 async def analytics_dashboard(key: str = Query(...)):
     if key != settings.admin_key:
         raise HTTPException(status_code=403, detail="Invalid admin key")
-    p = Path(__file__).resolve().parent.parent / "static" / "analytics.html"
+    # api/routes/analytics.py → project_root/static/analytics.html
+    p = Path(__file__).resolve().parent.parent.parent / "static" / "analytics.html"
     if p.exists():
         return FileResponse(str(p))
     return HTMLResponse("<h1>analytics.html not found in /static/</h1>")
@@ -430,7 +431,8 @@ async def analytics_dashboard(key: str = Query(...)):
 async def sales_dashboard(key: str = Query(...)):
     if key != settings.admin_key:
         raise HTTPException(status_code=403, detail="Invalid admin key")
-    p = Path(__file__).resolve().parent.parent / "static" / "sales.html"
+    # api/routes/analytics.py → project_root/static/sales.html
+    p = Path(__file__).resolve().parent.parent.parent / "static" / "sales.html"
     if p.exists():
         return FileResponse(str(p))
     return HTMLResponse("<h1>sales.html not found in /static/</h1>")
