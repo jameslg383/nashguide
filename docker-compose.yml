@@ -1,0 +1,66 @@
+services:
+  nashguide-postgres:
+    image: postgres:16-alpine
+    container_name: nashguide-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nashguide
+      POSTGRES_PASSWORD: nashguide
+      POSTGRES_DB: nashguide
+    volumes:
+      - nashguide_pgdata:/var/lib/postgresql/data
+    networks:
+      - nashguide-net
+
+  nashguide-redis:
+    image: redis:7-alpine
+    container_name: nashguide-redis
+    restart: unless-stopped
+    networks:
+      - nashguide-net
+
+  nashguide-api:
+    build: .
+    container_name: nashguide-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://nashguide:nashguide@nashguide-postgres:5432/nashguide
+      REDIS_URL: redis://nashguide-redis:6379/1
+    ports:
+      - "8080:8080"
+    depends_on:
+      - nashguide-postgres
+      - nashguide-redis
+    volumes:
+      - ./static:/app/static
+      - ./data:/app/data
+    networks:
+      - nashguide-net
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8080
+
+  nashguide-workers:
+    build: .
+    container_name: nashguide-workers
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://nashguide:nashguide@nashguide-postgres:5432/nashguide
+      REDIS_URL: redis://nashguide-redis:6379/1
+    depends_on:
+      - nashguide-postgres
+      - nashguide-redis
+      - nashguide-api
+    volumes:
+      - ./static:/app/static
+      - ./data:/app/data
+    networks:
+      - nashguide-net
+    command: python -m agents.run_all
+
+networks:
+  nashguide-net:
+    driver: bridge
+
+volumes:
+  nashguide_pgdata:
