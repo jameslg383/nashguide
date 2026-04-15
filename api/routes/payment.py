@@ -143,15 +143,19 @@ async def payment_success(
     db: Session = Depends(get_db),
 ):
     """PayPal redirects here after user approval. The `token` query param is the PayPal order ID."""
+    log.info("PayPal return received (token=%s, PayerID=%s)", token, PayerID)
     if not token:
-        return RedirectResponse(url="/?payment=error")
+        log.error("PayPal return missing token query param")
+        return RedirectResponse(url="/?payment=error&reason=no_token")
     try:
-        await _capture_and_fulfill(token, db)
-    except HTTPException:
-        return RedirectResponse(url="/?payment=error")
+        result = await _capture_and_fulfill(token, db)
+        log.info("Payment captured + fulfilled (order_id=%s)", result.get("order_id"))
+    except HTTPException as e:
+        log.error("Capture failed (token=%s): %s", token, e.detail)
+        return RedirectResponse(url=f"/?payment=error&reason=capture_{e.status_code}")
     except Exception:
         log.exception("payment_success handler crashed (token=%s)", token)
-        return RedirectResponse(url="/?payment=error")
+        return RedirectResponse(url="/?payment=error&reason=exception")
     return RedirectResponse(url="/?payment=success")
 
 

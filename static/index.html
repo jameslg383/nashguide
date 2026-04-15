@@ -414,10 +414,13 @@ function Checkout({ tier, quizAnswers, onBack }) {
           product_type: tier.id
         })
       });
-      if (!quizRes.ok) throw new Error('Quiz submission failed (' + quizRes.status + ')');
+      if (!quizRes.ok) {
+        const errText = await quizRes.text();
+        throw new Error('Quiz submission failed (' + quizRes.status + '): ' + errText.slice(0, 300));
+      }
       const quizData = await quizRes.json();
       if (!quizData.customer_id || !quizData.quiz_response_id) {
-        throw new Error('Quiz response missing IDs');
+        throw new Error('Quiz response missing IDs: ' + JSON.stringify(quizData).slice(0, 300));
       }
 
       // 2. Create PayPal order
@@ -430,7 +433,10 @@ function Checkout({ tier, quizAnswers, onBack }) {
           product_type: tier.id
         })
       });
-      if (!payRes.ok) throw new Error('Payment creation failed (' + payRes.status + ')');
+      if (!payRes.ok) {
+        const errText = await payRes.text();
+        throw new Error('Payment creation failed (' + payRes.status + '): ' + errText.slice(0, 300));
+      }
       const payData = await payRes.json();
 
       // 3. Redirect to PayPal — it will come back to /api/payment/success
@@ -487,6 +493,7 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
+    const reason = params.get('reason');
     if (payment === 'success') {
       setView('success');
       window.history.replaceState({}, '', '/');
@@ -494,7 +501,7 @@ function App() {
       alert('Payment was cancelled. You can try again anytime.');
       window.history.replaceState({}, '', '/');
     } else if (payment === 'error') {
-      alert('There was an issue with your payment. Please try again.');
+      alert('There was an issue with your payment' + (reason ? ' (' + reason + ')' : '') + '. Please try again or contact support.');
       window.history.replaceState({}, '', '/');
     }
   }, []);
