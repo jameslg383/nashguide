@@ -36,8 +36,24 @@ services:
       - ./static:/app/static
       - ./data:/app/data
     networks:
-      - nashguide-net
+      nashguide-net:
+        aliases:
+          - api
     command: uvicorn api.main:app --host 0.0.0.0 --port 8080
+
+  nginx:
+    image: nginx:alpine
+    container_name: nashguide-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - nashguide-api
+    networks:
+      - nashguide-net
 
   nashguide-workers:
     build: .
