@@ -7,9 +7,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://nashguide:nashguide@localhost:5432/nashguide"
     REDIS_URL: str = "redis://localhost:6379/1"
 
-    PAYPAL_CLIENT_ID: str = ""
-    PAYPAL_CLIENT_SECRET: str = ""
-    PAYPAL_MODE: str = "live"  # "live" | "sandbox"
+    paypal_client_id: str = ""      # reads PAYPAL_CLIENT_ID env var
+    paypal_client_secret: str = ""  # reads PAYPAL_CLIENT_SECRET env var
+    paypal_mode: str = "live"       # "live" | "sandbox"
 
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL: str = "claude-sonnet-4-20250514"
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = "dev-secret"
     admin_key: str = "dev-admin"  # reads ADMIN_KEY env var (case-insensitive)
-    SITE_URL: str = "http://localhost:8080"
+    site_url: str = "http://localhost:8080"  # reads SITE_URL env var
 
     MARKETING_ENABLED: bool = True
     MARKETING_TWEETS_PER_DAY: int = 3
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     def paypal_base(self) -> str:
         return (
             "https://api-m.paypal.com"
-            if self.PAYPAL_MODE == "live"
+            if self.paypal_mode == "live"
             else "https://api-m.sandbox.paypal.com"
         )
 

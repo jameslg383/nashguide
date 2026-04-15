@@ -7,7 +7,7 @@ async def _access_token() -> str:
     async with httpx.AsyncClient() as client:
         r = await client.post(
             f"{settings.paypal_base}/v1/oauth2/token",
-            auth=(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_CLIENT_SECRET),
+            auth=(settings.paypal_client_id, settings.paypal_client_secret),
             data={"grant_type": "client_credentials"},
             headers={"Accept": "application/json"},
             timeout=30,

@@ -389,32 +389,60 @@ function Pricing({ answers, onSelect, onBack }) {
 }
 
 /* ============ CHECKOUT ============ */
-function Checkout({ tier, onBack }) {
+function Checkout({ tier, quizAnswers, onBack }) {
   const [email, setEmail] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [sessionId, setSessionId] = useState(null);
 
   const handlePay = async () => {
     if (!email) return;
     if(window.ngTrack)window.ngTrack.paymentStart(tier.id, tier.price);
     setProcessing(true);
     try {
-      // Create payment
-      const res = await fetch(API_BASE + '/api/payment/create', {
+      // 1. Submit quiz + create/find customer. This is where the email first
+      //    gets attached to the quiz answers — we don't submit until now.
+      const quizRes = await fetch(API_BASE + '/api/quiz/submit', {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ session_id: sessionId, product_type: tier.id, amount: tier.price, email })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          email: email,
+          visit_dates: quizAnswers.dates || 'This weekend',
+          num_days: parseInt(quizAnswers.days) || 3,
+          group_type: quizAnswers.group || 'Friends trip',
+          vibe: quizAnswers.vibe || 'Mix of everything',
+          budget: quizAnswers.budget || 'Mid-range',
+          must_dos: quizAnswers.mustdos || '',
+          product_type: tier.id
+        })
       });
-      const data = await res.json();
-      if (data.approval_url) {
-        window.location.href = data.approval_url;
-      } else {
-        alert('Payment setup failed. Please try again.');
+      if (!quizRes.ok) throw new Error('Quiz submission failed (' + quizRes.status + ')');
+      const quizData = await quizRes.json();
+      if (!quizData.customer_id || !quizData.quiz_response_id) {
+        throw new Error('Quiz response missing IDs');
       }
+
+      // 2. Create PayPal order
+      const payRes = await fetch(API_BASE + '/api/payment/create', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          customer_id: quizData.customer_id,
+          quiz_response_id: quizData.quiz_response_id,
+          product_type: tier.id
+        })
+      });
+      if (!payRes.ok) throw new Error('Payment creation failed (' + payRes.status + ')');
+      const payData = await payRes.json();
+
+      // 3. Redirect to PayPal — it will come back to /api/payment/success
+      if (payData.approval_url) {
+        window.location.href = payData.approval_url;
+        return;
+      }
+      throw new Error(payData.detail || 'No approval URL returned');
     } catch(e) {
-      alert('Error connecting to payment. Please try again.');
+      alert('Payment setup failed: ' + (e.message || e));
+      setProcessing(false);
     }
-    setProcessing(false);
   };
 
   return (
@@ -455,6 +483,22 @@ function App() {
   const [selectedTier, setSelectedTier] = useState(null);
   const [waitlistDone, setWaitlistDone] = useState(false);
 
+  // Detect payment return from PayPal and show success / error state.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    if (payment === 'success') {
+      setView('success');
+      window.history.replaceState({}, '', '/');
+    } else if (payment === 'cancelled') {
+      alert('Payment was cancelled. You can try again anytime.');
+      window.history.replaceState({}, '', '/');
+    } else if (payment === 'error') {
+      alert('There was an issue with your payment. Please try again.');
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
+
   const handleQuizAnswer = (stepId, answer) => {
     if(window.ngTrack)window.ngTrack.quizStep(quizStep, answer);
     const updated = {...quizAnswers, [stepId]: answer};
@@ -462,12 +506,9 @@ function App() {
     if (quizStep < QUIZ_STEPS.length - 1) {
       setTimeout(() => setQuizStep(quizStep + 1), 300);
     } else {
+      // Don't submit yet — we need the email, which is collected at checkout.
+      // The quiz → customer → order → PayPal chain fires from Checkout.handlePay.
       if(window.ngTrack)window.ngTrack.quizComplete(updated);
-      // Submit quiz to backend
-      fetch(API_BASE + '/api/quiz/submit', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(updated)
-      }).catch(() => {});
       if(window.ngTrack)window.ngTrack.tierView();
       setView("pricing");
     }
@@ -501,7 +542,17 @@ function App() {
 
   if (view === "quiz") return <Quiz step={quizStep} answers={quizAnswers} onAnswer={handleQuizAnswer} onBack={()=> quizStep > 0 ? setQuizStep(quizStep-1) : setView("landing")} />;
   if (view === "pricing") return <Pricing answers={quizAnswers} onSelect={selectTier} onBack={()=>{setView("quiz");setQuizStep(QUIZ_STEPS.length-1)}} />;
-  if (view === "checkout") return <Checkout tier={selectedTier} onBack={backToPricing} />;
+  if (view === "checkout") return <Checkout tier={selectedTier} quizAnswers={quizAnswers} onBack={backToPricing} />;
+  if (view === "success") return (
+    <div style={{minHeight:'100vh',background:'#0a0a0f',display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',padding:20}}>
+      <div style={{maxWidth:560}}>
+        <div style={{fontSize:64,marginBottom:24}}>{"\u{1F3B8}"}</div>
+        <h1 className="playfair" style={{fontSize:48,fontWeight:700,marginBottom:16,color:'#fff',lineHeight:1.1}}>You're all set!</h1>
+        <p className="gray4" style={{fontSize:18,maxWidth:500,margin:'0 auto 32px',lineHeight:1.6}}>Your personalized Nashville itinerary is being crafted right now. Check your email in the next few minutes — we're sending you something special.</p>
+        <button onClick={()=>{window.location.href='/'}} style={{padding:'14px 36px',background:'linear-gradient(to right,#f59e0b,#f97316)',color:'#000',fontWeight:700,border:'none',borderRadius:999,fontSize:16,cursor:'pointer',fontFamily:'inherit'}}>Back to Home</button>
+      </div>
+    </div>
+  );
   return <Landing onStart={startQuiz} onWaitlist={handleWaitlist} waitlistDone={waitlistDone} />;
 }
 

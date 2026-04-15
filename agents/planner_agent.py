@@ -63,7 +63,7 @@ def process_job(job: dict):
             public_slug=slug,
             content_json=content,
             status="generated",
-            web_url=f"{settings.SITE_URL}/trip/{slug}",
+            web_url=f"{settings.site_url}/trip/{slug}",
         )
         db.add(itin)
         db.commit()

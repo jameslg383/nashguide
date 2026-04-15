@@ -38,7 +38,7 @@ def process_job(job: dict):
 
         # Render PDF
         pdf_rel = render_itinerary_pdf(itin.content_json, itin.public_slug)
-        itin.pdf_url = f"{settings.SITE_URL}{pdf_rel}"
+        itin.pdf_url = f"{settings.site_url}{pdf_rel}"
         itin.status = "delivered"
         order.status = "delivered"
         db.commit()

@@ -8,7 +8,7 @@ from api.models.order import QuizResponse
 
 router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 
-PRICING = {"classic": 9.99, "vip": 29.99, "bachelorette": 19.99}
+PRICING = {"classic": 9.99, "vip": 29.99, "bach": 19.99}
 
 
 class QuizStart(BaseModel):
