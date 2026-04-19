@@ -1,0 +1,26 @@
+# Caddy serves nashguide.online over HTTPS with auto-provisioned
+# Let's Encrypt certs. Plain HTTP on port 80 is auto-redirected to HTTPS.
+# Upstream is the FastAPI container, reachable on the internal Docker
+# network via the "api" alias (see docker-compose.yml).
+
+nashguide.online, www.nashguide.online {
+    encode gzip zstd
+
+    # Let the client see its own scheme/IP after the proxy hop
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    reverse_proxy api:8080 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# Catch-all for bare IP / wrong-host requests — return 444 (no response)
+:80 {
+    respond 444
+}
