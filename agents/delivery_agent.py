@@ -48,7 +48,7 @@ def process_job(job: dict):
         pdf_bytes = pdf_path.read_bytes()
 
         tpl = _email_env.get_template("email_delivery.html")
-        html = tpl.render(name=customer.name, trip_url=itin.web_url)
+        html = tpl.render(name=customer.name, trip_url=itin.web_url, pdf_url=itin.pdf_url)
 
         try:
             send_email(
@@ -57,7 +57,11 @@ def process_job(job: dict):
                 html=html,
                 attachments=[{
                     "filename": f"NashGuide-{itin.public_slug}.pdf",
-                    "content": list(pdf_bytes),
+                    # Resend expects base64-encoded string for `content`. Passing a
+                    # list of byte-ints works on some SDK versions but breaks Gmail's
+                    # attachment preview in others.
+                    "content": base64.b64encode(pdf_bytes).decode("ascii"),
+                    "content_type": "application/pdf",
                 }],
             )
             status = "sent"

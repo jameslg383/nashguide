@@ -3,9 +3,12 @@
 <div style="color:#c8102e;letter-spacing:2px;text-transform:uppercase;font-size:12px;font-weight:700">NashGuide AI</div>
 <h1 style="margin:8px 0 16px">Your Nashville trip is ready 🎸</h1>
 <p>Hey{% if name %} {{ name }}{% endif %},</p>
-<p>Your personalized NashGuide is attached as a PDF, and you can also view it online anywhere:</p>
-<p><a href="{{ trip_url }}" style="background:#c8102e;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block">Open your trip →</a></p>
+<p>Your personalized NashGuide is attached as a PDF. You can also view it online or download it directly below:</p>
+<p style="margin:24px 0">
+  <a href="{{ trip_url }}" style="background:#c8102e;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:700;margin-right:8px">Open trip online →</a>
+  {% if pdf_url %}<a href="{{ pdf_url }}" style="background:#f59e0b;color:#000;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:700">Download PDF ↓</a>{% endif %}
+</p>
 <p>A local friend-in-your-pocket built this just for you. Screenshot it, share it with your crew, and get after it.</p>
 <p>We'll send you one more reminder the day before your trip with a few last-minute tips.</p>
-<p style="color:#666;font-size:13px;margin-top:30px">— NashGuide AI<br>nashguide.ai</p>
+<p style="color:#666;font-size:13px;margin-top:30px">— NashGuide AI<br>nashguide.online</p>
 </body></html>
