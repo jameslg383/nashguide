@@ -149,6 +149,96 @@
     font-style: italic;
   }
 
+  /* ====================== WEATHER (VIP only) ====================== */
+  .weather-section {
+    padding: 26pt 0 20pt;
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+  .weather-kicker {
+    color: #c8102e;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 2.5pt;
+    text-transform: uppercase;
+    margin-bottom: 6pt;
+  }
+  .weather-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28pt;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 20pt;
+    line-height: 1.1;
+  }
+  .weather-grid {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 8pt;
+  }
+  .weather-cell {
+    background: #fff8e7;
+    border: 1pt solid #f59e0b;
+    border-radius: 6pt;
+    padding: 14pt 8pt;
+    text-align: center;
+    vertical-align: top;
+    width: 14%;
+  }
+  .weather-day-label {
+    font-size: 9pt;
+    color: #666;
+    letter-spacing: 1pt;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6pt;
+  }
+  .weather-emoji {
+    font-size: 24pt;
+    line-height: 1;
+    margin: 6pt 0 8pt;
+  }
+  .weather-temp {
+    font-family: 'Playfair Display', serif;
+    font-size: 18pt;
+    color: #c8102e;
+    line-height: 1;
+    margin-bottom: 4pt;
+  }
+  .weather-temp .lo {
+    color: #999;
+    font-size: 14pt;
+    font-style: italic;
+  }
+  .weather-desc {
+    font-size: 8.5pt;
+    color: #444;
+    margin-top: 4pt;
+    line-height: 1.3;
+  }
+  .weather-precip {
+    font-size: 8pt;
+    color: #3b82f6;
+    font-weight: 700;
+    margin-top: 4pt;
+  }
+  .weather-source {
+    font-size: 8pt;
+    color: #aaa;
+    text-align: right;
+    margin-top: 10pt;
+    letter-spacing: 1pt;
+  }
+  .weather-note {
+    background: #fff8e7;
+    border-left: 3pt solid #f59e0b;
+    padding: 14pt 18pt;
+    border-radius: 4pt;
+    font-size: 11pt;
+    font-style: italic;
+    color: #555;
+  }
+
   /* ====================== DAYS ====================== */
   .day {
     page-break-before: always;
@@ -385,6 +475,32 @@
     </div>
   </div>
 </div>
+
+<!-- ====================== WEATHER (VIP only) ====================== -->
+{% if trip.weather_forecast %}
+<div class="weather-section">
+  <div class="weather-kicker">Weather outlook · {{ trip.weather_forecast.period }}</div>
+  <h2 class="weather-title">What to pack, thermally</h2>
+  {% if trip.weather_forecast.days %}
+    <table class="weather-grid"><tr>
+      {% for d in trip.weather_forecast.days %}
+      <td class="weather-cell">
+        <div class="weather-day-label">{{ d.label }}</div>
+        <div class="weather-emoji">{{ d.emoji }}</div>
+        <div class="weather-temp"><b>{{ d.high_f }}°</b><span class="lo"> / {{ d.low_f }}°</span></div>
+        <div class="weather-desc">{{ d.description }}</div>
+        {% if d.precip_chance and d.precip_chance >= 30 %}
+        <div class="weather-precip">{{ d.precip_chance }}% rain</div>
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr></table>
+    <p class="weather-source">Forecast: Open-Meteo · Nashville, TN</p>
+  {% else %}
+    <p class="weather-note">{{ trip.weather_forecast.note }}</p>
+  {% endif %}
+</div>
+{% endif %}
 
 <!-- ====================== DAYS ====================== -->
 {% for day in trip.days %}

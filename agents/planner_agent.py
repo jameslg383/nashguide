@@ -11,7 +11,7 @@ from api.models.database import SessionLocal
 from api.models.order import Order, QuizResponse
 from api.models.venue import Venue
 from api.models.itinerary import Itinerary
-from api.services import claude_ai
+from api.services import claude_ai, weather
 
 log = logging.getLogger("planner")
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +55,23 @@ def process_job(job: dict):
         log.info("Generating itinerary for order %s against %d venues", order.id, len(venues))
 
         content = claude_ai.generate_itinerary(quiz.raw_json, venues)
+
+        # VIP tier bonus: live Nashville weather forecast for the trip dates.
+        # Runs after Claude so a weather-fetch failure never blocks the itinerary.
+        if order.product_type == "vip":
+            try:
+                content["weather_forecast"] = weather.fetch_forecast(
+                    visit_dates=quiz.visit_dates,
+                    num_days=quiz.num_days,
+                )
+                log.info(
+                    "VIP weather attached for order %s (%d days, period=%s)",
+                    order.id,
+                    len(content["weather_forecast"].get("days", [])),
+                    content["weather_forecast"].get("period"),
+                )
+            except Exception:
+                log.exception("Weather fetch failed for order %s — continuing without", order.id)
 
         slug = secrets.token_urlsafe(8)
         itin = Itinerary(
