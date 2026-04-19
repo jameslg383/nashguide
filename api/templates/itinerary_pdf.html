@@ -4,54 +4,444 @@
 <meta charset="utf-8">
 <title>{{ trip.trip_title }}</title>
 <style>
-  @page { size: Letter; margin: 0.6in; }
-  body { font-family: Helvetica, Arial, sans-serif; color: #1a1a1a; font-size: 11pt; line-height: 1.5; }
-  .header { border-bottom: 4px solid #c8102e; padding-bottom: 10px; margin-bottom: 20px; }
-  .brand { color: #c8102e; font-size: 13pt; letter-spacing: 2px; text-transform: uppercase; }
-  h1 { font-size: 22pt; margin: 6px 0; }
-  .summary { font-style: italic; color: #444; margin-bottom: 20px; }
-  .day { margin-top: 24px; page-break-inside: avoid; }
-  .day-header { background: #1a1a1a; color: #fff; padding: 8px 12px; font-weight: bold; }
-  .theme { color: #c8102e; font-style: italic; margin: 6px 0 12px; }
-  .block { border-left: 3px solid #c8102e; padding: 8px 12px; margin: 10px 0; background: #f9f9f9; page-break-inside: avoid; }
-  .time { font-weight: bold; color: #c8102e; }
-  .venue { font-weight: bold; font-size: 12pt; }
-  .tip { font-size: 9.5pt; color: #555; font-style: italic; margin-top: 4px; }
-  .footer { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 9pt; color: #777; }
-  .pack { margin-top: 20px; padding: 12px; background: #fff8e7; border: 1px dashed #c8102e; }
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,400&display=swap');
+
+  @page {
+    size: Letter;
+    margin: 0.55in 0.65in 0.7in 0.65in;
+    @top-left {
+      content: "{{ trip.trip_title }}";
+      font-family: 'DM Sans', sans-serif;
+      font-size: 8pt;
+      color: #999;
+      margin-bottom: 10pt;
+    }
+    @top-right {
+      content: "NASHGUIDE AI";
+      font-family: 'DM Sans', sans-serif;
+      font-size: 8pt;
+      letter-spacing: 2pt;
+      color: #f59e0b;
+      font-weight: 700;
+      margin-bottom: 10pt;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 8pt;
+      color: #bbb;
+    }
+    @bottom-left {
+      content: "nashguide.online";
+      font-family: 'DM Sans', sans-serif;
+      font-size: 8pt;
+      color: #bbb;
+      letter-spacing: 1pt;
+    }
+  }
+  @page :first {
+    margin: 0;
+    @top-left { content: none; }
+    @top-right { content: none; }
+    @bottom-right { content: none; }
+    @bottom-left { content: none; }
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    color: #1a1a1a;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    margin: 0;
+  }
+  h1, h2, h3, h4 { font-family: 'Playfair Display', serif; margin: 0; }
+
+  /* ====================== COVER ====================== */
+  .cover {
+    height: 11in;
+    page-break-after: always;
+    background: linear-gradient(135deg, #0f0608 0%, #2a1609 50%, #0f0608 100%);
+    color: #fff;
+    position: relative;
+    padding: 0.9in 0.75in;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -200pt; right: -120pt;
+    width: 600pt; height: 600pt;
+    background: radial-gradient(circle, rgba(245,158,11,.2) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -150pt; left: -80pt;
+    width: 400pt; height: 400pt;
+    background: radial-gradient(circle, rgba(200,16,46,.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .cover-content {
+    position: relative;
+    z-index: 2;
+    height: 9.2in;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .cover-brand {
+    color: #f59e0b;
+    font-size: 12pt;
+    letter-spacing: 6pt;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .cover-tag {
+    color: #999;
+    font-size: 9pt;
+    letter-spacing: 2pt;
+    text-transform: uppercase;
+    margin-top: 6pt;
+  }
+  .cover-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 54pt;
+    line-height: 1.02;
+    font-weight: 900;
+    color: #fff;
+    margin: 30pt 0 24pt;
+    letter-spacing: -0.5pt;
+  }
+  .cover-title em {
+    font-style: italic;
+    color: #f59e0b;
+    font-weight: 400;
+  }
+  .cover-summary {
+    font-size: 13pt;
+    font-style: italic;
+    color: #ddd;
+    line-height: 1.55;
+    max-width: 5.5in;
+    border-left: 2pt solid #f59e0b;
+    padding-left: 16pt;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 30pt;
+    color: #aaa;
+    font-size: 9pt;
+    letter-spacing: 1.5pt;
+    text-transform: uppercase;
+    padding-top: 20pt;
+    border-top: 1pt solid rgba(255,255,255,.12);
+  }
+  .cover-meta b {
+    color: #f59e0b;
+    font-weight: 700;
+    display: block;
+    margin-top: 4pt;
+    font-size: 11pt;
+    letter-spacing: 0;
+    text-transform: none;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+  }
+
+  /* ====================== DAYS ====================== */
+  .day {
+    page-break-before: always;
+  }
+  .day:first-of-type {
+    page-break-before: auto;
+  }
+  .day-hero {
+    background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+    color: #0f0608;
+    padding: 22pt 24pt 20pt;
+    margin: -0.55in -0.65in 24pt;
+    page-break-after: avoid;
+  }
+  .day-label {
+    font-size: 10pt;
+    font-weight: 700;
+    letter-spacing: 3pt;
+    text-transform: uppercase;
+    opacity: 0.9;
+  }
+  .day-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28pt;
+    font-weight: 800;
+    line-height: 1.05;
+    margin: 6pt 0 4pt;
+  }
+
+  /* ====================== BLOCKS ====================== */
+  .block {
+    page-break-inside: avoid;
+    margin-bottom: 22pt;
+    padding: 18pt 20pt;
+    background: #fcfcfc;
+    border: 1pt solid #eee;
+    border-left: 4pt solid #f59e0b;
+    border-radius: 4pt;
+  }
+  .block-head {
+    display: table;
+    width: 100%;
+    margin-bottom: 10pt;
+  }
+  .block-time-col {
+    display: table-cell;
+    width: 95pt;
+    vertical-align: top;
+  }
+  .block-content-col {
+    display: table-cell;
+    vertical-align: top;
+  }
+  .block-time-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 22pt;
+    font-weight: 700;
+    color: #c8102e;
+    line-height: 1;
+  }
+  .block-time-duration {
+    font-size: 8.5pt;
+    color: #999;
+    margin-top: 5pt;
+    letter-spacing: 1pt;
+    text-transform: uppercase;
+  }
+  .block-activity {
+    font-size: 8.5pt;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 2pt;
+    font-weight: 700;
+    margin-bottom: 2pt;
+  }
+  .block-venue {
+    font-family: 'Playfair Display', serif;
+    font-size: 22pt;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #1a1a1a;
+    margin: 2pt 0 8pt;
+  }
+  .block-why {
+    font-size: 10.5pt;
+    line-height: 1.6;
+    color: #333;
+  }
+  .block-tip {
+    background: #fff8e7;
+    border: 1pt dashed #f59e0b;
+    border-radius: 4pt;
+    padding: 10pt 14pt;
+    margin-top: 12pt;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    color: #3f2500;
+  }
+  .block-tip-label {
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    color: #c8102e;
+    text-transform: uppercase;
+    letter-spacing: 2pt;
+    margin-bottom: 4pt;
+  }
+
+  /* ====================== EXTRAS ====================== */
+  .extras {
+    page-break-before: always;
+  }
+  .extras-head {
+    font-family: 'Playfair Display', serif;
+    font-size: 32pt;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 8pt;
+  }
+  .extras-sub {
+    color: #888;
+    font-style: italic;
+    margin-bottom: 28pt;
+    font-size: 11pt;
+  }
+
+  .pack-box {
+    background: linear-gradient(135deg, #fff8e7 0%, #fffbf0 100%);
+    border: 1.5pt dashed #f59e0b;
+    border-radius: 10pt;
+    padding: 20pt 24pt;
+    margin-bottom: 18pt;
+    page-break-inside: avoid;
+  }
+  .pack-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16pt;
+    font-weight: 700;
+    color: #c8102e;
+    margin-bottom: 12pt;
+  }
+  .pack-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    columns: 2;
+    column-gap: 24pt;
+  }
+  .pack-list li {
+    font-size: 10.5pt;
+    padding: 3pt 0 3pt 16pt;
+    position: relative;
+    break-inside: avoid;
+  }
+  .pack-list li::before {
+    content: '✓';
+    color: #f59e0b;
+    font-weight: 700;
+    position: absolute;
+    left: 0;
+  }
+
+  .spotify {
+    background: #0f0608;
+    color: #fff;
+    padding: 22pt 26pt;
+    border-radius: 10pt;
+    margin-bottom: 18pt;
+    page-break-inside: avoid;
+    border-left: 4pt solid #22c55e;
+  }
+  .spotify-label {
+    color: #22c55e;
+    font-size: 8.5pt;
+    letter-spacing: 3pt;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .spotify-text {
+    font-size: 15pt;
+    font-style: italic;
+    margin-top: 8pt;
+    line-height: 1.5;
+    color: #f4f4f4;
+  }
+
+  .closing {
+    font-size: 12pt;
+    font-style: italic;
+    color: #444;
+    text-align: center;
+    padding: 40pt 20pt 20pt;
+    border-top: 1pt solid #e5e5e5;
+    margin-top: 36pt;
+    line-height: 1.7;
+  }
+  .sign {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: #c8102e;
+    margin-top: 14pt;
+    letter-spacing: 2pt;
+    font-size: 11pt;
+    text-transform: uppercase;
+    font-style: normal;
+  }
+  .sign-site {
+    color: #999;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9pt;
+    font-weight: 400;
+    letter-spacing: 1.5pt;
+    margin-top: 4pt;
+  }
 </style>
 </head>
 <body>
-<div class="header">
-  <div class="brand">NashGuide AI</div>
-  <h1>{{ trip.trip_title }}</h1>
-</div>
-<p class="summary">{{ trip.summary }}</p>
 
+<!-- ====================== COVER ====================== -->
+<div class="cover">
+  <div class="cover-content">
+    <div>
+      <div class="cover-brand">NashGuide AI</div>
+      <div class="cover-tag">Personalized · hand-built · all yours</div>
+      <h1 class="cover-title">{{ trip.trip_title }}</h1>
+      <p class="cover-summary">{{ trip.summary }}</p>
+    </div>
+    <div class="cover-meta">
+      <div>Days<b>{{ trip.days|length }}</b></div>
+      <div>Stops<b>{{ trip.days|sum(attribute="blocks")|length if trip.days|length > 1 else trip.days[0].blocks|length }}</b></div>
+      <div>Made by<b>Your local AI</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== DAYS ====================== -->
 {% for day in trip.days %}
 <div class="day">
-  <div class="day-header">Day {{ day.day_number }} — {{ day.date_label }}</div>
-  <div class="theme">{{ day.theme }}</div>
+  <div class="day-hero">
+    <div class="day-label">Day {{ day.day_number }} &nbsp;&middot;&nbsp; {{ day.date_label }}</div>
+    <h2 class="day-title">{{ day.theme }}</h2>
+  </div>
   {% for b in day.blocks %}
   <div class="block">
-    <div><span class="time">{{ b.time }}</span> &middot; {{ b.activity }} &middot; <span class="venue">{{ b.venue_name }}</span></div>
-    <div>{{ b.why }}</div>
-    {% if b.insider_tip %}<div class="tip">Insider tip: {{ b.insider_tip }}</div>{% endif %}
+    <div class="block-head">
+      <div class="block-time-col">
+        <div class="block-time-val">{{ b.time }}</div>
+        {% if b.duration_min %}<div class="block-time-duration">{{ b.duration_min }} min</div>{% endif %}
+      </div>
+      <div class="block-content-col">
+        <div class="block-activity">{{ b.activity }}</div>
+        <h3 class="block-venue">{{ b.venue_name }}</h3>
+        <div class="block-why">{{ b.why }}</div>
+      </div>
+    </div>
+    {% if b.insider_tip %}
+    <div class="block-tip">
+      <span class="block-tip-label">🤫 Insider tip</span>
+      {{ b.insider_tip }}
+    </div>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
 {% endfor %}
 
-{% if trip.packing_list %}
-<div class="pack">
-  <b>Pack this:</b>
-  <ul>{% for p in trip.packing_list %}<li>{{ p }}</li>{% endfor %}</ul>
+<!-- ====================== EXTRAS ====================== -->
+<div class="extras">
+  <h2 class="extras-head">Before you go</h2>
+  <p class="extras-sub">Quick prep so your weekend runs clean.</p>
+
+  {% if trip.packing_list %}
+  <div class="pack-box">
+    <div class="pack-title">📦 Pack this</div>
+    <ul class="pack-list">
+      {% for p in trip.packing_list %}<li>{{ p }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if trip.spotify_vibe %}
+  <div class="spotify">
+    <div class="spotify-label">🎧 Your soundtrack</div>
+    <div class="spotify-text">{{ trip.spotify_vibe }}</div>
+  </div>
+  {% endif %}
+
+  <div class="closing">
+    {{ trip.closing_note }}
+    <div class="sign">— NashGuide AI</div>
+    <div class="sign-site">nashguide.online</div>
+  </div>
 </div>
-{% endif %}
 
-{% if trip.spotify_vibe %}<p><b>Soundtrack:</b> {{ trip.spotify_vibe }}</p>{% endif %}
-<p>{{ trip.closing_note }}</p>
-
-<div class="footer">Generated by NashGuide AI &middot; nashguide.ai</div>
 </body>
 </html>

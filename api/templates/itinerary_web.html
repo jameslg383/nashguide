@@ -4,57 +4,543 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{ trip.trip_title }} — NashGuide AI</title>
+<meta name="description" content="{{ trip.summary }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
 <style>
-  :root { --red:#c8102e; --bg:#0f0f10; --card:#1a1a1c; --ink:#f4f4f4; --muted:#a3a3a3; }
-  * { box-sizing: border-box; }
-  body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--ink); margin: 0; line-height: 1.55; }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 20px 80px; }
-  .brand { color: var(--red); letter-spacing: 2px; text-transform: uppercase; font-size: 12px; font-weight: 700; }
-  h1 { font-size: 32px; margin: 6px 0 12px; line-height: 1.1; }
-  .summary { color: var(--muted); font-style: italic; margin-bottom: 28px; }
-  .day { margin: 32px 0; }
-  .day-head { font-size: 20px; border-left: 4px solid var(--red); padding-left: 12px; }
-  .theme { color: var(--red); font-style: italic; margin: 6px 0 16px 16px; }
-  .block { background: var(--card); border-radius: 12px; padding: 16px 18px; margin: 12px 0; }
-  .time { color: var(--red); font-weight: 700; font-size: 14px; }
-  .venue { font-weight: 700; font-size: 18px; margin: 4px 0; }
-  .why { color: #ddd; }
-  .tip { color: var(--muted); font-size: 13px; font-style: italic; margin-top: 8px; border-top: 1px dashed #333; padding-top: 8px; }
-  .pack { background: #1f1a10; border: 1px dashed var(--red); border-radius: 12px; padding: 16px; margin-top: 24px; }
-  .footer { color: var(--muted); font-size: 12px; margin-top: 40px; text-align: center; }
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #15151b;
+    --card: #1c1c24;
+    --card-hover: #22222a;
+    --border: #2a2a30;
+    --ink: #f4f4f4;
+    --muted: #9ca3af;
+    --muted2: #6b7280;
+    --amber: #f59e0b;
+    --amber2: #f97316;
+    --red: #c8102e;
+    --green: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.55;
+    min-height: 100vh;
+  }
+  .playfair { font-family: 'Playfair Display', serif; }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* ============ HERO ============ */
+  .hero {
+    position: relative;
+    padding: 56px 24px 56px;
+    overflow: hidden;
+    text-align: center;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,158,11,.18), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(200,16,46,.1), transparent 70%),
+      linear-gradient(to bottom, #0a0a0f, #15151b);
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/></svg>");
+    pointer-events: none;
+  }
+  .hero-inner { position: relative; max-width: 720px; margin: 0 auto; }
+  .brand {
+    color: var(--amber);
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .brand-sub {
+    color: var(--muted2);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  h1.trip-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 8vw, 72px);
+    line-height: 1.02;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin: 18px 0 24px;
+  }
+  h1.trip-title em {
+    font-style: italic;
+    color: var(--amber);
+    font-weight: 400;
+  }
+  .summary {
+    max-width: 620px;
+    margin: 0 auto 28px;
+    font-size: 17px;
+    line-height: 1.65;
+    color: #d1d5db;
+    font-style: italic;
+  }
+  .summary::before, .summary::after {
+    content: '"';
+    color: var(--amber);
+    opacity: 0.4;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    padding: 20px 0 26px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    margin: 8px 0 28px;
+    flex-wrap: wrap;
+  }
+  .meta-row .v {
+    display: block;
+    color: var(--amber);
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: 0;
+    text-transform: none;
+    margin-top: 4px;
+  }
+  .cta-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    background: rgba(245,158,11,.14);
+    color: var(--amber);
+    border: 1px solid rgba(245,158,11,.35);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all .15s;
+  }
+  .btn:hover { background: rgba(245,158,11,.22); transform: translateY(-1px); }
+  .btn.primary {
+    background: linear-gradient(to right, var(--amber), var(--amber2));
+    color: #000;
+    border: none;
+  }
+  .btn.primary:hover { filter: brightness(1.05); }
+
+  /* ============ LAYOUT ============ */
+  .container { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+
+  /* ============ DAY ============ */
+  .day { margin: 48px 0 40px; scroll-margin-top: 20px; }
+  .day-header {
+    background: linear-gradient(135deg, var(--amber), var(--amber2));
+    color: #0f0608;
+    padding: 20px 24px;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(245,158,11,.15);
+    position: relative;
+  }
+  .day-header::before {
+    content: '';
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    width: 1px; height: 10px; background: var(--amber);
+    opacity: 0.5;
+  }
+  .day:first-of-type .day-header::before { display: none; }
+  .day-label {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    font-weight: 700; opacity: 0.85;
+  }
+  .day-theme {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    margin-top: 6px;
+    line-height: 1.2;
+  }
+
+  /* ============ BLOCKS ============ */
+  .blocks {
+    position: relative;
+    margin-top: 4px;
+    padding-left: 24px;
+  }
+  .blocks::before {
+    content: '';
+    position: absolute;
+    left: 5px; top: 12px; bottom: 12px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--amber), transparent 95%);
+    opacity: 0.3;
+  }
+  .block {
+    position: relative;
+    padding: 22px 0 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .block:last-of-type { border-bottom: none; }
+  .block::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 30px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 0 4px rgba(245,158,11,.15);
+  }
+  .block-time {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 6px;
+  }
+  .block-time-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+  }
+  .block-time-dur {
+    font-size: 11px;
+    color: var(--muted2);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .block-activity {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  .block-venue {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.12;
+    margin: 4px 0 12px;
+    color: #fff;
+  }
+  .block-why {
+    color: #d9d9d9;
+    font-size: 15.5px;
+    line-height: 1.65;
+  }
+  .block-tip {
+    display: block;
+    margin-top: 14px;
+    background: linear-gradient(135deg, rgba(245,158,11,.1), rgba(245,158,11,.05));
+    border: 1px solid rgba(245,158,11,.25);
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 14.5px;
+    color: #e5d9bc;
+    line-height: 1.6;
+  }
+  .block-tip-label {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--amber);
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .block-tip-label .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--amber);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  /* ============ EXTRAS ============ */
+  .extras {
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+  .extras h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 40px);
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .extras-sub {
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 28px;
+  }
+  .pack-box {
+    background: linear-gradient(135deg, rgba(245,158,11,.1), rgba(245,158,11,.03));
+    border: 1px dashed rgba(245,158,11,.5);
+    padding: 26px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+  }
+  .pack-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--amber);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .pack-list {
+    list-style: none;
+    columns: 2;
+    column-gap: 24px;
+  }
+  .pack-list li {
+    padding: 4px 0 4px 20px;
+    position: relative;
+    font-size: 14.5px;
+    color: #d1d5db;
+    break-inside: avoid;
+  }
+  .pack-list li::before {
+    content: '✓';
+    color: var(--amber);
+    font-weight: 700;
+    position: absolute;
+    left: 0;
+  }
+  .spotify-box {
+    background: linear-gradient(135deg, rgba(34,197,94,.1), rgba(34,197,94,.03));
+    border: 1px solid rgba(34,197,94,.3);
+    padding: 22px 26px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+  }
+  .spotify-label {
+    color: var(--green);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .spotify-text {
+    font-size: 18px;
+    font-style: italic;
+    margin-top: 10px;
+    line-height: 1.5;
+    color: #f4f4f4;
+  }
+
+  /* ============ CLOSING ============ */
+  .closing {
+    text-align: center;
+    padding: 48px 20px 20px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.75;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .sig {
+    font-family: 'Playfair Display', serif;
+    color: var(--amber);
+    font-weight: 700;
+    font-style: normal;
+    margin-top: 16px;
+    letter-spacing: 2px;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  .sig-site {
+    color: var(--muted2);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+  }
+
+  /* ============ FLOATING NAV ============ */
+  .floating-nav {
+    position: sticky;
+    bottom: 16px;
+    z-index: 20;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 20px auto 0;
+    max-width: fit-content;
+  }
+  .floating-nav a {
+    padding: 10px 16px;
+    background: rgba(21,21,27,.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .floating-nav a:hover { color: var(--amber); border-color: rgba(245,158,11,.4); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 640px) {
+    .hero { padding: 40px 20px 44px; }
+    .meta-row { gap: 24px; font-size: 10px; }
+    .block-venue { font-size: 24px; }
+    .pack-list { columns: 1; }
+    .floating-nav { display: none; }
+  }
+
+  /* ============ PRINT ============ */
+  @media print {
+    body { background: #fff !important; color: #000 !important; }
+    .hero { background: #fff !important; color: #000 !important; padding: 20px 0 !important; }
+    h1.trip-title { color: #000 !important; }
+    h1.trip-title em { color: #c8102e !important; }
+    .summary { color: #333 !important; }
+    .meta-row { color: #666 !important; border-color: #ccc !important; }
+    .meta-row .v { color: #c8102e !important; }
+    .cta-row, .floating-nav { display: none !important; }
+    .day-header { background: #f59e0b !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .block-venue { color: #000 !important; }
+    .block-why { color: #333 !important; }
+    .block-tip { background: #fff8e7 !important; color: #3f2500 !important; }
+    .spotify-box { background: #f0f9f4 !important; }
+    .closing { color: #666 !important; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="brand">NashGuide AI</div>
-  <h1>{{ trip.trip_title }}</h1>
-  <p class="summary">{{ trip.summary }}</p>
 
-  {% for day in trip.days %}
-  <section class="day">
-    <div class="day-head">Day {{ day.day_number }} &middot; {{ day.date_label }}</div>
-    <div class="theme">{{ day.theme }}</div>
-    {% for b in day.blocks %}
-    <div class="block">
-      <div class="time">{{ b.time }} &middot; {{ b.activity }}</div>
-      <div class="venue">{{ b.venue_name }}</div>
-      <div class="why">{{ b.why }}</div>
-      {% if b.insider_tip %}<div class="tip">Insider tip: {{ b.insider_tip }}</div>{% endif %}
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="brand">NashGuide AI</div>
+    <div class="brand-sub">Personalized · hand-built · all yours</div>
+    <h1 class="trip-title playfair">{{ trip.trip_title }}</h1>
+    <p class="summary">{{ trip.summary }}</p>
+
+    <div class="meta-row">
+      <div>Days <span class="v">{{ trip.days|length }}</span></div>
+      <div>Stops <span class="v">{% set total = namespace(n=0) %}{% for d in trip.days %}{% set total.n = total.n + d.blocks|length %}{% endfor %}{{ total.n }}</span></div>
+      <div>Vibe <span class="v">Nashville</span></div>
     </div>
+
+    <div class="cta-row">
+      <button class="btn primary" onclick="window.print()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        Print / save PDF
+      </button>
+      <button class="btn" onclick="doShare()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+        Share
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DAYS ============ -->
+<div class="container">
+
+{% for day in trip.days %}
+<section class="day" id="day-{{ day.day_number }}">
+  <div class="day-header">
+    <div class="day-label">Day {{ day.day_number }} &middot; {{ day.date_label }}</div>
+    <div class="day-theme">{{ day.theme }}</div>
+  </div>
+  <div class="blocks">
+    {% for b in day.blocks %}
+    <article class="block">
+      <div class="block-time">
+        <div class="block-time-val">{{ b.time }}</div>
+        {% if b.duration_min %}<div class="block-time-dur">· {{ b.duration_min }} min</div>{% endif %}
+      </div>
+      <div class="block-activity">{{ b.activity }}</div>
+      <h3 class="block-venue">{{ b.venue_name }}</h3>
+      <div class="block-why">{{ b.why }}</div>
+      {% if b.insider_tip %}
+      <div class="block-tip">
+        <div class="block-tip-label"><span class="dot"></span> Insider tip</div>
+        {{ b.insider_tip }}
+      </div>
+      {% endif %}
+    </article>
     {% endfor %}
-  </section>
-  {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+<!-- ============ EXTRAS ============ -->
+<section class="extras">
+  <h2 class="playfair">Before you go</h2>
+  <p class="extras-sub">Quick prep so your weekend runs clean.</p>
 
   {% if trip.packing_list %}
-  <div class="pack">
-    <b>Pack this:</b>
-    <ul>{% for p in trip.packing_list %}<li>{{ p }}</li>{% endfor %}</ul>
+  <div class="pack-box">
+    <div class="pack-title">📦 Pack this</div>
+    <ul class="pack-list">
+      {% for p in trip.packing_list %}<li>{{ p }}</li>{% endfor %}
+    </ul>
   </div>
   {% endif %}
 
-  {% if trip.spotify_vibe %}<p><b>Soundtrack:</b> {{ trip.spotify_vibe }}</p>{% endif %}
-  <p>{{ trip.closing_note }}</p>
-  <div class="footer">NashGuide AI &middot; nashguide.ai</div>
+  {% if trip.spotify_vibe %}
+  <div class="spotify-box">
+    <div class="spotify-label">🎧 Your soundtrack</div>
+    <div class="spotify-text">{{ trip.spotify_vibe }}</div>
+  </div>
+  {% endif %}
+</section>
+
+<!-- ============ FLOATING DAY NAV ============ -->
+{% if trip.days|length > 1 %}
+<nav class="floating-nav">
+  {% for day in trip.days %}
+    <a href="#day-{{ day.day_number }}">Day {{ day.day_number }}</a>
+  {% endfor %}
+</nav>
+{% endif %}
+
+<!-- ============ CLOSING ============ -->
+<div class="closing">
+  {{ trip.closing_note }}
+  <div class="sig">— NashGuide AI</div>
+  <div class="sig-site">nashguide.online</div>
 </div>
+
+</div>
+
+<script>
+function doShare() {
+  const data = {title: document.title, url: window.location.href};
+  if (navigator.share) {
+    navigator.share(data).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      alert('Link copied to clipboard');
+    });
+  }
+}
+</script>
+
 </body>
 </html>
