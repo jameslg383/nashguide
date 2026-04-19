@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     RESEND_API_KEY: str = ""
     RESEND_FROM: str = "NashGuide AI <trips@nashguide.ai>"
+    resend_override_to: str = ""  # if set, ALL outbound mail redirects here — use while domain verification is pending
 
     TWITTER_API_KEY: str = ""
     TWITTER_API_SECRET: str = ""
