@@ -25,7 +25,9 @@ class Settings(BaseSettings):
     GOOGLE_MAPS_API_KEY: str = ""
 
     SECRET_KEY: str = "dev-secret"
-    admin_key: str = "dev-admin"  # reads ADMIN_KEY env var (case-insensitive)
+    admin_key: str = "dev-admin"  # reads ADMIN_KEY env var — legacy ?key= auth
+    admin_user: str = "admin"     # session login username
+    admin_pass: str = "admin"     # session login password
     site_url: str = "http://localhost:8080"  # reads SITE_URL env var
 
     MARKETING_ENABLED: bool = True

@@ -2,12 +2,26 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from pathlib import Path
 
+from api.config import settings
 from api.models.database import init_db
-from api.routes import quiz, payment, trip, blog, admin, waitlist, analytics
+from api.routes import quiz, payment, trip, blog, admin, waitlist, analytics, admin_console
 
 app = FastAPI(title="NashGuide AI", version="0.1.0")
+
+# Session cookie for the admin console (30 days). Signed with SECRET_KEY.
+# https_only is False so it works in dev; Caddy sets X-Forwarded-Proto so the
+# cookie is still attached on the HTTPS domain.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    session_cookie="ng_admin",
+    max_age=60 * 60 * 24 * 30,
+    same_site="lax",
+    https_only=False,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,6 +41,7 @@ app.include_router(blog.router)
 app.include_router(waitlist.router)
 app.include_router(admin.router)
 app.include_router(analytics.router)
+app.include_router(admin_console.router)
 
 
 @app.on_event("startup")
