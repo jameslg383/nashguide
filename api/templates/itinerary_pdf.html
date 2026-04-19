@@ -376,9 +376,11 @@
       <h1 class="cover-title">{{ trip.trip_title }}</h1>
       <p class="cover-summary">{{ trip.summary }}</p>
     </div>
+    {% set stop_count = namespace(n=0) %}
+    {% for d in trip.days %}{% set stop_count.n = stop_count.n + d.blocks|length %}{% endfor %}
     <div class="cover-meta">
       <div>Days<b>{{ trip.days|length }}</b></div>
-      <div>Stops<b>{{ trip.days|sum(attribute="blocks")|length if trip.days|length > 1 else trip.days[0].blocks|length }}</b></div>
+      <div>Stops<b>{{ stop_count.n }}</b></div>
       <div>Made by<b>Your local AI</b></div>
     </div>
   </div>
