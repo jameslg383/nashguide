@@ -3,19 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>NashGuide — Nashville's AI Trip Companion</title>
+<title>NashGuide AI — Your Personal Nashville Trip Planner</title>
 <meta name="description" content="AI-powered personalized Nashville trip planning. Get an hour-by-hour itinerary with insider tips in under 2 minutes."/>
-<link rel="icon" type="image/svg+xml" href="/static/brand/favicon.svg"/>
-<meta property="og:title" content="NashGuide — Nashville's AI Trip Companion"/>
-<meta property="og:description" content="Tell us your vibe. Our AI builds your perfect Nashville trip in under 2 minutes."/>
-<meta property="og:image" content="/static/brand/nashguide-logo.png"/>
-<meta property="og:url" content="https://nashguide.online"/>
-<meta name="theme-color" content="#1e3a5f"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body,#root{background:#0a1a2e!important;color:#fff!important;min-height:100vh}
+html,body,#root{background:#0a0a0f!important;color:#fff!important;min-height:100vh}
 body{font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
 .playfair{font-family:'Playfair Display',serif}
 a{color:inherit;text-decoration:none}
@@ -157,7 +151,7 @@ const Stars = ({count}) => (
 function Landing({ onStart, onWaitlist, waitlistDone }) {
   const [email, setEmail] = useState("");
   return (
-    <div className="grain" style={{minHeight:'100vh',background:'#0a1a2e'}}>
+    <div className="grain" style={{minHeight:'100vh',background:'#0a0a0f'}}>
       {/* HERO */}
       <section className="relative" style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,overflow:'hidden'}}>
@@ -170,11 +164,7 @@ function Landing({ onStart, onWaitlist, waitlistDone }) {
           ))}
         </div>
         <div className="relative text-center" style={{maxWidth:800,zIndex:10}}>
-          <div className="slide-up" style={{marginBottom:28,display:'flex',justifyContent:'center'}}>
-            <img src="/static/brand/nashguide-logo.png" alt="NashGuide" style={{height:72,width:'auto',filter:'drop-shadow(0 6px 24px rgba(0,0,0,.4))'}}
-                 onError={(e)=>{e.target.onerror=null;e.target.src='/static/brand/logo.svg';e.target.style.background='rgba(255,255,255,.95)';e.target.style.padding='12px 20px';e.target.style.borderRadius='12px';}}/>
-          </div>
-          <div className="slide-up" style={{marginBottom:24}}><span className="tag" style={{color:'#5eead4',borderColor:'rgba(20,184,166,.4)',background:'rgba(20,184,166,.08)'}}>Nashville's AI Trip Companion</span></div>
+          <div className="slide-up" style={{marginBottom:24}}><span className="tag">AI-Powered Trip Planning</span></div>
           <h1 className="slide-up-1 playfair" style={{fontSize:80,fontWeight:800,lineHeight:1,marginBottom:24}}>Nashville, <span className="shimmer-text" style={{fontStyle:'italic'}}>your way</span></h1>
           <p className="slide-up-2 hero-subtitle" style={{fontSize:20,color:'#9ca3af',maxWidth:600,margin:'0 auto 40px',lineHeight:1.6}}>Tell us your vibe. Our AI builds your perfect Nashville trip in under 2 minutes — hour-by-hour, with insider tips no guidebook has.</p>
           <div className="slide-up-3 flex items-center justify-center gap-4" style={{flexWrap:'wrap',marginBottom:64}}>
@@ -313,11 +303,14 @@ function Landing({ onStart, onWaitlist, waitlistDone }) {
       </section>
 
       {/* FOOTER */}
-      <footer style={{borderTop:'1px solid rgba(255,255,255,.05)',padding:'48px 20px',background:'rgba(30,58,95,.3)'}}>
+      <footer style={{borderTop:'1px solid rgba(255,255,255,.05)',padding:'48px 20px'}}>
         <div className="container flex items-center justify-center gap-4" style={{flexWrap:'wrap',justifyContent:'space-between'}}>
-          <img src="/static/brand/nashguide-logo.png" alt="NashGuide" style={{height:40,width:'auto'}}
-               onError={(e)=>{e.target.onerror=null;e.target.src='/static/brand/logo.svg';}}/>
-          <p style={{color:'#94a3b8',fontSize:14,letterSpacing:1}}>Made with {"\u266A"} in Nashville, TN</p>
+          <div className="flex items-center gap-2">
+            <span style={{fontSize:20}}>{"\u{1F3B8}"}</span>
+            <span style={{fontWeight:700,fontSize:18}}>NashGuide</span>
+            <span style={{color:'#fbbf24',fontSize:12,fontWeight:700,background:'rgba(245,158,11,.1)',padding:'2px 8px',borderRadius:4}}>AI</span>
+          </div>
+          <p className="gray6" style={{fontSize:14}}>Made with {"\u266A"} in Nashville, TN</p>
         </div>
       </footer>
     </div>
@@ -330,7 +323,7 @@ function Quiz({ step, answers, onAnswer, onBack }) {
   const current = QUIZ_STEPS[step];
   const progress = ((step+1)/QUIZ_STEPS.length)*100;
   return (
-    <div className="fade-in" style={{minHeight:'100vh',background:'#0a1a2e',display:'flex',flexDirection:'column'}}>
+    <div className="fade-in" style={{minHeight:'100vh',background:'#0a0a0f',display:'flex',flexDirection:'column'}}>
       <div className="progress-bar"><div className="progress-fill" style={{width:progress+'%'}}/></div>
       <div style={{padding:16}}>
         <button onClick={onBack} className="flex items-center gap-2 gray5" style={{background:'none',border:'none',cursor:'pointer',fontSize:14,fontFamily:'inherit',color:'#6b7280'}}>
@@ -362,7 +355,7 @@ function Quiz({ step, answers, onAnswer, onBack }) {
 /* ============ PRICING ============ */
 function Pricing({ answers, onSelect, onBack }) {
   return (
-    <div className="fade-in" style={{minHeight:'100vh',background:'#0a1a2e',display:'flex',flexDirection:'column'}}>
+    <div className="fade-in" style={{minHeight:'100vh',background:'#0a0a0f',display:'flex',flexDirection:'column'}}>
       <div style={{padding:16}}>
         <button onClick={onBack} className="flex items-center gap-2" style={{background:'none',border:'none',cursor:'pointer',fontSize:14,fontFamily:'inherit',color:'#6b7280'}}>
           <svg style={{width:16,height:16}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg> Back
@@ -501,7 +494,7 @@ function Checkout({ tier, quizAnswers, onBack }) {
   };
 
   return (
-    <div style={{minHeight:'100vh',background:'#0a1a2e',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:20}}>
+    <div style={{minHeight:'100vh',background:'#0a0a0f',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:20}}>
       <div style={{width:'100%',maxWidth:440}}>
         <button onClick={onBack} className="flex items-center gap-2" style={{background:'none',border:'none',cursor:'pointer',fontSize:14,fontFamily:'inherit',color:'#6b7280',marginBottom:32}}>
           <svg style={{width:16,height:16}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg> Back to plans
@@ -612,7 +605,7 @@ function App() {
   if (view === "pricing") return <Pricing answers={quizAnswers} onSelect={selectTier} onBack={()=>{setView("quiz");setQuizStep(QUIZ_STEPS.length-1)}} />;
   if (view === "checkout") return <Checkout tier={selectedTier} quizAnswers={quizAnswers} onBack={backToPricing} />;
   if (view === "success") return (
-    <div style={{minHeight:'100vh',background:'#0a1a2e',display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',padding:20}}>
+    <div style={{minHeight:'100vh',background:'#0a0a0f',display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',padding:20}}>
       <div style={{maxWidth:560}}>
         <div style={{fontSize:64,marginBottom:24}}>{"\u{1F3B8}"}</div>
         <h1 className="playfair" style={{fontSize:48,fontWeight:700,marginBottom:16,color:'#fff',lineHeight:1.1}}>You're all set!</h1>

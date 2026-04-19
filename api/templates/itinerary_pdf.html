@@ -60,23 +60,11 @@
   .cover {
     height: 11in;
     page-break-after: always;
-    background: linear-gradient(135deg, #0a1a2e 0%, #1e3a5f 50%, #0a1a2e 100%);
+    background: linear-gradient(135deg, #0f0608 0%, #2a1609 50%, #0f0608 100%);
     color: #fff;
     position: relative;
     padding: 0.9in 0.75in;
     overflow: hidden;
-  }
-  .cover-logo {
-    background: #ffffff;
-    padding: 10pt 14pt;
-    border-radius: 10pt;
-    display: inline-block;
-    margin-bottom: 32pt;
-  }
-  .cover-logo img {
-    height: 42pt;
-    width: auto;
-    display: block;
   }
   .cover::before {
     content: '';
@@ -170,7 +158,7 @@
   }
   .day-hero {
     background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
-    color: #0a1a2e;
+    color: #0f0608;
     padding: 22pt 24pt 20pt;
     margin: -0.55in -0.65in 24pt;
     page-break-after: avoid;
@@ -324,7 +312,7 @@
   }
 
   .spotify {
-    background: #0a1a2e;
+    background: #0f0608;
     color: #fff;
     padding: 22pt 26pt;
     border-radius: 10pt;
@@ -383,23 +371,14 @@
 <div class="cover">
   <div class="cover-content">
     <div>
-      <div class="cover-logo">
-        {# WeasyPrint resolves file URLs; logo_path is set by pdf_generator.py #}
-        {% if logo_path %}
-          <img src="{{ logo_path }}" alt="NashGuide"/>
-        {% else %}
-          <span style="color:#1e3a5f;font-family:'Playfair Display',serif;font-size:26pt;font-weight:800;letter-spacing:-0.5pt;">NashGuide</span>
-        {% endif %}
-      </div>
+      <div class="cover-brand">NashGuide AI</div>
       <div class="cover-tag">Personalized · hand-built · all yours</div>
       <h1 class="cover-title">{{ trip.trip_title }}</h1>
       <p class="cover-summary">{{ trip.summary }}</p>
     </div>
-    {% set stop_count = namespace(n=0) %}
-    {% for d in trip.days %}{% set stop_count.n = stop_count.n + d.blocks|length %}{% endfor %}
     <div class="cover-meta">
       <div>Days<b>{{ trip.days|length }}</b></div>
-      <div>Stops<b>{{ stop_count.n }}</b></div>
+      <div>Stops<b>{{ trip.days|sum(attribute="blocks")|length if trip.days|length > 1 else trip.days[0].blocks|length }}</b></div>
       <div>Made by<b>Your local AI</b></div>
     </div>
   </div>
