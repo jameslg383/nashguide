@@ -1,0 +1,40 @@
+<!-- NashGuide AI wordmark — SVG fallback used when the full-color logo PNG
+     isn't available. Scales cleanly from favicon size up to hero banners.
+     Uses the brand palette: navy #1e3a5f, amber #f59e0b, teal #14b8a6. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 110" role="img" aria-label="NashGuide">
+  <defs>
+    <linearGradient id="pinGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Amber location pin -->
+  <g transform="translate(10, 18)">
+    <path d="M22 0C9.85 0 0 9.85 0 22c0 16.5 22 42 22 42s22-25.5 22-42C44 9.85 34.15 0 22 0z" fill="url(#pinGrad)"/>
+    <circle cx="22" cy="22" r="8" fill="#ffffff"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="70" y="65"
+        font-family="'DM Sans', 'Segoe UI', system-ui, sans-serif"
+        font-weight="800"
+        font-size="46"
+        fill="#1e3a5f"
+        letter-spacing="-1">Nash<tspan fill="#1e3a5f">G</tspan>uide</text>
+
+  <!-- Teal swoosh under the wordmark -->
+  <path d="M70 84 Q180 98 280 86 T380 86"
+        stroke="#14b8a6"
+        stroke-width="2.5"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Tagline -->
+  <text x="70" y="104"
+        font-family="'DM Sans', 'Segoe UI', system-ui, sans-serif"
+        font-weight="600"
+        font-size="9"
+        fill="#14b8a6"
+        letter-spacing="2.4">NASHVILLE'S AI TRIP COMPANION</text>
+</svg>

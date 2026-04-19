@@ -60,34 +60,76 @@ LOGIN_PAGE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NashGuide Admin · Sign in</title>
+<link rel="icon" type="image/svg+xml" href="/static/brand/favicon.svg"/>
 <style>
-  :root { --red:#c8102e; --amber:#f59e0b; --bg:#0a0a0f; --card:#1a1a1c; --ink:#f4f4f4; --muted:#9ca3af; }
+  :root {
+    --navy:#1e3a5f; --navy-deep:#0a1a2e; --card:#142842; --border:#2d4e75;
+    --amber:#f59e0b; --amber2:#f97316; --teal:#14b8a6;
+    --ink:#f1f5f9; --muted:#94a3b8; --red:#c8102e;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-  .card { background: var(--card); border: 1px solid #2a2a30; border-radius: 14px; padding: 36px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
-  .brand { color: var(--amber); letter-spacing: 2px; text-transform: uppercase; font-size: 12px; font-weight: 700; }
-  h1 { font-size: 24px; margin: 6px 0 4px; }
-  .sub { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
-  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-  input { width: 100%; padding: 12px 14px; background: #0f0f13; border: 1px solid #2a2a30; border-radius: 8px; color: var(--ink); font-size: 15px; outline: none; margin-bottom: 16px; font-family: inherit; }
+  body {
+    margin: 0; font-family: -apple-system, 'DM Sans', system-ui, sans-serif;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(245,158,11,.1), transparent 70%),
+      radial-gradient(ellipse 40% 30% at 50% 100%, rgba(20,184,166,.08), transparent 70%),
+      linear-gradient(to bottom, var(--navy-deep), #081221);
+    color: var(--ink); min-height: 100vh;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .wrap { width: 100%; max-width: 400px; text-align: center; }
+  .logo { margin-bottom: 20px; display: inline-block; background: #fff; padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+  .logo img { height: 54px; width: auto; display: block; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 36px 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    text-align: left;
+  }
+  .kicker { color: var(--teal); letter-spacing: 3px; text-transform: uppercase; font-size: 11px; font-weight: 700; }
+  h1 { font-size: 24px; margin: 6px 0 4px; color: var(--ink); }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  input {
+    width: 100%; padding: 12px 14px;
+    background: rgba(10,26,46,.6); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--ink); font-size: 15px; outline: none;
+    margin-bottom: 16px; font-family: inherit; transition: border-color .15s;
+  }
   input:focus { border-color: var(--amber); }
-  button { width: 100%; padding: 13px; background: linear-gradient(to right, var(--amber), #f97316); color: #000; font-weight: 700; font-size: 15px; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; }
-  button:hover { transform: translateY(-1px); }
-  .err { background: rgba(200,16,46,.1); border: 1px solid rgba(200,16,46,.3); color: #ff9aa5; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+  button {
+    width: 100%; padding: 13px;
+    background: linear-gradient(to right, var(--amber), var(--amber2));
+    color: #0a1a2e; font-weight: 700; font-size: 15px;
+    border: none; border-radius: 8px; cursor: pointer; font-family: inherit;
+    transition: transform .15s, box-shadow .15s;
+  }
+  button:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(245,158,11,.2); }
+  .err { background: rgba(200,16,46,.1); border: 1px solid rgba(200,16,46,.35); color: #ffb3bc; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+  .footer { color: var(--muted); font-size: 11px; letter-spacing: 1px; margin-top: 16px; text-transform: uppercase; }
 </style>
 </head>
 <body>
-<form class="card" method="post" action="/admin/login">
-  <div class="brand">NashGuide Admin</div>
-  <h1>Sign in</h1>
-  <p class="sub">Only authorized operators.</p>
-  __ERROR__
-  <label>Username</label>
-  <input name="username" autocomplete="username" autofocus required>
-  <label>Password</label>
-  <input name="password" type="password" autocomplete="current-password" required>
-  <button type="submit">Sign in</button>
-</form>
+<div class="wrap">
+  <span class="logo">
+    <img src="/static/brand/nashguide-logo.png" alt="NashGuide"
+         onerror="this.onerror=null;this.src='/static/brand/logo.svg';"/>
+  </span>
+  <form class="card" method="post" action="/admin/login">
+    <div class="kicker">Admin · Operator Console</div>
+    <h1>Sign in</h1>
+    <p class="sub">Only authorized operators.</p>
+    __ERROR__
+    <label>Username</label>
+    <input name="username" autocomplete="username" autofocus required>
+    <label>Password</label>
+    <input name="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Sign in</button>
+  </form>
+  <div class="footer">nashguide.online</div>
+</div>
 </body>
 </html>"""
 

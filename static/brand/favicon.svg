@@ -1,0 +1,15 @@
+<!-- Simple favicon — amber pin on navy. Scales to 16x16. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#1e3a5f"/>
+  <g transform="translate(20, 10)">
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z"
+          fill="url(#g)"/>
+    <circle cx="12" cy="12" r="4.5" fill="#ffffff"/>
+  </g>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+  </defs>
+</svg>

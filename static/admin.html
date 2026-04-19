@@ -4,18 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NashGuide Admin Console</title>
+<link rel="icon" type="image/svg+xml" href="/static/brand/favicon.svg"/>
 <style>
   :root {
-    --bg: #0a0a0f;
-    --bg2: #101015;
-    --card: #15151b;
-    --card2: #1c1c24;
-    --border: #25252f;
-    --ink: #f4f4f4;
-    --muted: #9ca3af;
-    --muted2: #6b7280;
-    --amber: #f59e0b;
-    --amber2: #f97316;
+    --bg: #0a1a2e;        /* deep navy */
+    --bg2: #0f2942;       /* sidebar navy */
+    --card: #142842;      /* card navy */
+    --card2: #1a3456;     /* card hover */
+    --border: #2d4e75;    /* navy border */
+    --ink: #f1f5f9;
+    --muted: #94a3b8;
+    --muted2: #64748b;
+    --navy: #1e3a5f;      /* brand primary */
+    --amber: #f59e0b;     /* primary accent */
+    --amber2: #f97316;    /* orange */
+    --teal: #14b8a6;      /* secondary accent */
+    --teal2: #2dd4bf;     /* teal light */
     --red: #c8102e;
     --green: #22c55e;
     --blue: #3b82f6;
@@ -141,8 +145,10 @@
 <body>
 <div class="app">
   <aside>
-    <div class="brand">NashGuide</div>
-    <div class="brand-name">Admin</div>
+    <img src="/static/brand/nashguide-logo.png" alt="NashGuide"
+         style="width:100%;max-width:180px;height:auto;margin-bottom:4px;background:#fff;padding:8px 10px;border-radius:10px;"
+         onerror="this.onerror=null;this.src='/static/brand/logo.svg';"/>
+    <div class="brand-name" style="color:var(--teal);letter-spacing:2px;font-size:10px;text-transform:uppercase;font-weight:700;margin-bottom:28px;margin-top:6px">Operator Console</div>
     <button class="nav-btn active" data-tab="overview">🏠 Overview</button>
     <button class="nav-btn" data-tab="orders">💳 Orders</button>
     <button class="nav-btn" data-tab="visitors">👥 Visitors</button>

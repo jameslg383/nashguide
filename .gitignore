@@ -1,0 +1,43 @@
+# Secrets — NEVER commit these
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Editor / IDE
+.claude/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Generated trips + blog
+static/trips/*.pdf
+static/blog/*
+
+# Docker / runtime
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
+
+# Keep the directory placeholders
+!static/brand/.gitkeep
+!static/trips/.gitkeep
+!static/blog/.gitkeep

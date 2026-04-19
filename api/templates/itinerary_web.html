@@ -3,22 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{ trip.trip_title }} — NashGuide AI</title>
+<title>{{ trip.trip_title }} — NashGuide</title>
 <meta name="description" content="{{ trip.summary }}">
+<link rel="icon" type="image/svg+xml" href="/static/brand/favicon.svg"/>
+<meta name="theme-color" content="#1e3a5f"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --bg2: #15151b;
-    --card: #1c1c24;
-    --card-hover: #22222a;
-    --border: #2a2a30;
-    --ink: #f4f4f4;
-    --muted: #9ca3af;
-    --muted2: #6b7280;
+    --bg: #0a1a2e;        /* navy deep */
+    --bg2: #0f2942;       /* navy */
+    --card: #142842;
+    --card-hover: #1a3456;
+    --border: #2d4e75;
+    --ink: #f1f5f9;
+    --muted: #94a3b8;
+    --muted2: #64748b;
+    --navy: #1e3a5f;
     --amber: #f59e0b;
     --amber2: #f97316;
+    --teal: #14b8a6;
     --red: #c8102e;
     --green: #22c55e;
   }
@@ -43,7 +47,7 @@
     background:
       radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,158,11,.18), transparent 70%),
       radial-gradient(ellipse 60% 40% at 50% 100%, rgba(200,16,46,.1), transparent 70%),
-      linear-gradient(to bottom, #0a0a0f, #15151b);
+      linear-gradient(to bottom, #0a1a2e, #0f2942);
   }
   .hero::before {
     content: '';
@@ -434,7 +438,11 @@
 <!-- ============ HERO ============ -->
 <section class="hero">
   <div class="hero-inner">
-    <div class="brand">NashGuide AI</div>
+    <a href="/" style="display:inline-block;margin-bottom:22px;background:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);">
+      <img src="/static/brand/nashguide-logo.png" alt="NashGuide"
+           style="height:38px;width:auto;display:block;"
+           onerror="this.onerror=null;this.src='/static/brand/logo.svg';"/>
+    </a>
     <div class="brand-sub">Personalized · hand-built · all yours</div>
     <h1 class="trip-title playfair">{{ trip.trip_title }}</h1>
     <p class="summary">{{ trip.summary }}</p>
