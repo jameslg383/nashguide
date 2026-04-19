@@ -7,7 +7,7 @@ from pathlib import Path
 
 from api.config import settings
 from api.models.database import init_db
-from api.routes import quiz, payment, trip, blog, admin, waitlist, analytics, admin_console
+from api.routes import quiz, payment, trip, blog, admin, waitlist, analytics, admin_console, promo
 
 app = FastAPI(title="NashGuide AI", version="0.1.0")
 
@@ -42,6 +42,7 @@ app.include_router(waitlist.router)
 app.include_router(admin.router)
 app.include_router(analytics.router)
 app.include_router(admin_console.router)
+app.include_router(promo.router)
 
 
 @app.on_event("startup")

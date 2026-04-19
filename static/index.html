@@ -392,6 +392,48 @@ function Pricing({ answers, onSelect, onBack }) {
 function Checkout({ tier, quizAnswers, onBack }) {
   const [email, setEmail] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoMsg, setPromoMsg] = useState(null);  // {type: 'ok'|'err', text: ...}
+  const [applyingPromo, setApplyingPromo] = useState(false);
+
+  const quizPayload = () => ({
+    email: email,
+    visit_dates: quizAnswers.dates || 'This weekend',
+    num_days: parseInt(quizAnswers.days) || 3,
+    group_type: quizAnswers.group || 'Friends trip',
+    vibe: quizAnswers.vibe || 'Mix of everything',
+    budget: quizAnswers.budget || 'Mid-range',
+    must_dos: quizAnswers.mustdos || '',
+    product_type: tier.id,
+  });
+
+  const handleApplyPromo = async () => {
+    if (!email) { setPromoMsg({type:'err', text:'Enter your email first'}); return; }
+    if (!promoCode) { setPromoMsg({type:'err', text:'Enter a promo code'}); return; }
+    setApplyingPromo(true);
+    setPromoMsg(null);
+    try {
+      const res = await fetch(API_BASE + '/api/promo/apply', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ code: promoCode, ...quizPayload() })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || 'Code invalid');
+      }
+      if (data.success && data.free) {
+        if(window.ngTrack)window.ngTrack.paymentStart(tier.id, 0);
+        // Skip PayPal entirely — go straight to success.
+        window.location.href = '/?payment=success';
+        return;
+      }
+      throw new Error('Unexpected response');
+    } catch(e) {
+      setPromoMsg({type:'err', text: e.message || String(e)});
+      setApplyingPromo(false);
+    }
+  };
 
   const handlePay = async () => {
     if (!email) return;
@@ -465,6 +507,18 @@ function Checkout({ tier, quizAnswers, onBack }) {
             <label className="gray4" style={{fontSize:14,display:'block',marginBottom:6}}>Email (we'll send your itinerary here)</label>
             <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com"/>
           </div>
+
+          <div style={{marginBottom:16,padding:12,background:'rgba(245,158,11,.05)',border:'1px dashed rgba(245,158,11,.3)',borderRadius:10}}>
+            <label className="gray4" style={{fontSize:12,display:'block',marginBottom:6,letterSpacing:1,textTransform:'uppercase',fontWeight:600,color:'#fbbf24'}}>Promo / test code</label>
+            <div style={{display:'flex',gap:6}}>
+              <input className="input" type="text" value={promoCode} onChange={e=>{setPromoCode(e.target.value.toUpperCase());setPromoMsg(null);}} placeholder="CODE" style={{flex:1,textTransform:'uppercase',letterSpacing:1,fontFamily:'monospace'}}/>
+              <button onClick={handleApplyPromo} disabled={applyingPromo||!promoCode||!email} style={{padding:'0 16px',background:(applyingPromo||!promoCode||!email)?'rgba(255,255,255,.08)':'rgba(245,158,11,.2)',color:(applyingPromo||!promoCode||!email)?'#666':'#fbbf24',border:'1px solid rgba(245,158,11,.3)',borderRadius:8,fontSize:13,fontWeight:700,cursor:(applyingPromo||!promoCode||!email)?'not-allowed':'pointer',fontFamily:'inherit'}}>{applyingPromo?'…':'Apply'}</button>
+            </div>
+            {promoMsg && (
+              <div style={{marginTop:8,fontSize:12,color:promoMsg.type==='err'?'#ff6b7a':'#4ade80'}}>{promoMsg.text}</div>
+            )}
+          </div>
+
           <button onClick={handlePay} disabled={!email||processing} style={{width:'100%',padding:16,background:(!email||processing)?'rgba(255,255,255,.1)':'linear-gradient(to right,#f59e0b,#f97316)',color:(!email||processing)?'#666':'#000',fontWeight:700,border:'none',borderRadius:12,fontSize:14,cursor:(!email||processing)?'not-allowed':'pointer',fontFamily:'inherit'}}>
             {processing ? 'Processing...' : `Pay $${tier.price} with PayPal`}
           </button>

@@ -150,6 +150,7 @@
     <button class="nav-btn" data-tab="funnel">🎯 Funnel</button>
     <button class="nav-btn" data-tab="events">📡 Live events</button>
     <button class="nav-btn" data-tab="content">📝 Content</button>
+    <button class="nav-btn" data-tab="promos">🎟️ Promo codes</button>
     <button class="nav-btn" data-tab="system">⚙️ System</button>
     <div class="nav-sep"></div>
     <div class="me" id="me">signed in</div>
@@ -334,6 +335,46 @@
         </div>
       </section>
 
+      <!-- PROMOS TAB -->
+      <section class="tab" data-tab="promos" hidden>
+        <div class="panel" style="margin-bottom:16px">
+          <h2>Create a new code</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:12px">
+            <div>
+              <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Code</label>
+              <input id="new-promo-code" placeholder="FOUNDER2026" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--ink);font-family:monospace;text-transform:uppercase;letter-spacing:1px;margin-top:4px">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Description</label>
+              <input id="new-promo-desc" placeholder="e.g. launch gift" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--ink);font-family:inherit;margin-top:4px">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Max uses</label>
+              <input id="new-promo-max" type="number" min="1" placeholder="blank = unlimited" style="width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--ink);font-family:inherit;margin-top:4px">
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+            <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Applies to:</label>
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)"><input type="checkbox" class="new-promo-product" value="classic" checked> Classic</label>
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)"><input type="checkbox" class="new-promo-product" value="vip" checked> VIP</label>
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)"><input type="checkbox" class="new-promo-product" value="bach" checked> Bachelorette</label>
+          </div>
+          <button id="create-promo-btn" style="padding:10px 20px;background:linear-gradient(to right, #f59e0b, #f97316);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit">+ Create code</button>
+          <div id="new-promo-msg" style="margin-top:10px;font-size:13px"></div>
+        </div>
+
+        <div class="panel">
+          <h2>All promo codes <span class="count" id="promos-count"></span></h2>
+          <table id="promos-table">
+            <thead><tr>
+              <th>Code</th><th>Description</th><th>Uses</th><th>Products</th>
+              <th>Active</th><th>Created</th><th></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- SYSTEM TAB -->
       <section class="tab" data-tab="system" hidden>
         <div class="cards" id="system-cards"></div>
@@ -419,7 +460,82 @@ function render() {
   renderEvents();
   renderContentTab();
   renderSystem();
+  renderPromos();
 }
+
+let PROMOS = [];
+async function renderPromos() {
+  try {
+    const r = await fetch('/api/admin/promo', {credentials: 'include'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    PROMOS = j.codes || [];
+  } catch (e) {
+    PROMOS = [];
+  }
+  document.getElementById('promos-count').textContent = PROMOS.length;
+  document.querySelector('#promos-table tbody').innerHTML = PROMOS.length ? PROMOS.map(p => `
+    <tr>
+      <td class="mono" style="font-weight:700;color:var(--amber)">${escapeHtml(p.code)}</td>
+      <td>${escapeHtml(p.description || '—')}</td>
+      <td>${p.uses_count}${p.max_uses ? ' / ' + p.max_uses : ' <span style="color:var(--muted2);font-size:11px">(∞)</span>'}</td>
+      <td style="font-size:12px;color:var(--muted)">${(p.allowed_product_types && p.allowed_product_types.length) ? escapeHtml(p.allowed_product_types.join(', ')) : 'all'}</td>
+      <td>${p.active ? '<span class="pill pill-paid">active</span>' : '<span class="pill pill-failed">inactive</span>'}</td>
+      <td>${fmtDate(p.created_at)}</td>
+      <td>
+        ${p.active
+          ? '<button class="link-btn" onclick="togglePromo(\\'' + p.code + '\\',false)">deactivate</button>'
+          : '<button class="link-btn" onclick="togglePromo(\\'' + p.code + '\\',true)">reactivate</button>'}
+      </td>
+    </tr>
+  `).join('') : '<tr><td colspan="7" class="empty">No promo codes yet — create one above</td></tr>';
+}
+
+async function togglePromo(code, activate) {
+  const action = activate ? 'activate' : 'deactivate';
+  try {
+    const r = await fetch('/api/admin/promo/' + encodeURIComponent(code) + '/' + action, {method: 'POST', credentials: 'include'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    await renderPromos();
+  } catch(e) {
+    alert('Failed to ' + action + ': ' + e.message);
+  }
+}
+
+async function createPromo() {
+  const code = document.getElementById('new-promo-code').value.trim().toUpperCase();
+  const desc = document.getElementById('new-promo-desc').value.trim();
+  const maxUses = parseInt(document.getElementById('new-promo-max').value) || null;
+  const products = [...document.querySelectorAll('.new-promo-product:checked')].map(c => c.value);
+  const msg = document.getElementById('new-promo-msg');
+  if (!code) { msg.innerHTML = '<span style="color:#ff6b7a">Code is required</span>'; return; }
+  msg.innerHTML = '<span style="color:var(--muted)">Creating…</span>';
+  try {
+    const r = await fetch('/api/admin/promo', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        code: code,
+        description: desc || null,
+        discount_type: 'free',
+        discount_value: 100,
+        max_uses: maxUses,
+        allowed_product_types: products.length === 3 ? [] : products,  // [] = all
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'HTTP ' + r.status);
+    msg.innerHTML = '<span style="color:#4ade80">✓ Created <b>' + escapeHtml(code) + '</b> — share it with testers</span>';
+    document.getElementById('new-promo-code').value = '';
+    document.getElementById('new-promo-desc').value = '';
+    document.getElementById('new-promo-max').value = '';
+    await renderPromos();
+  } catch(e) {
+    msg.innerHTML = '<span style="color:#ff6b7a">Failed: ' + escapeHtml(e.message) + '</span>';
+  }
+}
+document.getElementById('create-promo-btn').addEventListener('click', createPromo);
 
 function renderOverview() {
   const o = DATA.overview, r = DATA.revenue;

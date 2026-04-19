@@ -29,5 +29,6 @@ def init_db():
         itinerary,
         content,
         analytics_event,
+        promo_code,
     )
     Base.metadata.create_all(bind=engine)
