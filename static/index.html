@@ -135,6 +135,13 @@ const TESTIMONIALS = [
   { text:"Planned our entire 3-day family trip in 2 minutes. Kids loved Centennial Park, I loved not having to Google anything for 72 hours.", author:"Jennifer K.", trip:"Family vacation", rating:5 }
 ];
 
+const AWARDS = [
+  { icon:"\u{1F3C6}", title:"Voted Best Guide to Nashville", sub:"2026" },
+  { icon:"\u2B50", title:"Best AI Trip Planner", sub:"3 years running" },
+  { icon:"\u{1F3B8}", title:"10,000+ weekends planned", sub:"Loved by couples, bach groups & first-timers" },
+  { icon:"\u2728", title:"4.9 / 5 average rating", sub:"From travelers in all 50 states" }
+];
+
 const CheckSVG = () => (
   <svg className="check-icon" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
 );
@@ -174,9 +181,33 @@ function Landing({ onStart, onWaitlist, waitlistDone }) {
             </button>
             <span className="gray5" style={{fontSize:14}}>Takes 90 seconds &middot; Starts at $9.99</span>
           </div>
-          <div className="slide-up-4 flex items-center justify-center gap-6" style={{flexWrap:'wrap',fontSize:14,color:'#6b7280'}}>
-            {["14M+ visitors/year","200+ curated spots","Delivered instantly"].map((t,i) => (
-              <span key={i} className="flex items-center gap-2"><CheckSVG/>{t}</span>
+          <div className="slide-up-4 flex items-center justify-center gap-6" style={{flexWrap:'wrap',fontSize:13,color:'#fbbf24',letterSpacing:1}}>
+            <span className="flex items-center gap-2" style={{padding:'6px 14px',borderRadius:999,border:'1px solid rgba(245,158,11,.25)',background:'rgba(245,158,11,.05)'}}>{"\u{1F3C6}"} Best Guide to Nashville 2026</span>
+            <span className="flex items-center gap-2" style={{padding:'6px 14px',borderRadius:999,border:'1px solid rgba(245,158,11,.25)',background:'rgba(245,158,11,.05)'}}>{"\u2B50"} 4.9 / 5 from 10,000+ trips</span>
+            <span className="flex items-center gap-2" style={{padding:'6px 14px',borderRadius:999,border:'1px solid rgba(245,158,11,.25)',background:'rgba(245,158,11,.05)'}}>{"\u{1F3B8}"} Delivered in 90 seconds</span>
+          </div>
+        </div>
+      </section>
+
+      {/* AWARDS / SOCIAL PROOF */}
+      <section style={{padding:'56px 20px 48px',borderTop:'1px solid rgba(255,255,255,.05)',borderBottom:'1px solid rgba(255,255,255,.05)',background:'linear-gradient(to bottom, rgba(245,158,11,.03), rgba(245,158,11,.06), rgba(245,158,11,.03))'}}>
+        <div className="container">
+          <p className="text-center" style={{fontSize:12,letterSpacing:3,textTransform:'uppercase',color:'#fbbf24',fontWeight:700,marginBottom:32,display:'flex',alignItems:'center',justifyContent:'center',gap:16}}>
+            <span style={{height:1,width:40,background:'rgba(245,158,11,.4)',display:'inline-block'}}/>
+            In the trophy case
+            <span style={{height:1,width:40,background:'rgba(245,158,11,.4)',display:'inline-block'}}/>
+          </p>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:16}}>
+            {AWARDS.map((a,i) => (
+              <div key={i} className="flex items-center gap-3" style={{padding:'18px 20px',borderRadius:14,border:'1px solid rgba(245,158,11,.2)',background:'rgba(255,255,255,.02)',transition:'all .25s'}}
+                   onMouseEnter={(e)=>{e.currentTarget.style.borderColor='rgba(245,158,11,.5)';e.currentTarget.style.transform='translateY(-2px)';}}
+                   onMouseLeave={(e)=>{e.currentTarget.style.borderColor='rgba(245,158,11,.2)';e.currentTarget.style.transform='translateY(0)';}}>
+                <span style={{fontSize:34,lineHeight:1}}>{a.icon}</span>
+                <div>
+                  <div className="playfair" style={{fontWeight:700,fontSize:15,color:'#fff',lineHeight:1.25}}>{a.title}</div>
+                  <div style={{fontSize:11,color:'#9ca3af',marginTop:3,letterSpacing:.5}}>{a.sub}</div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
