@@ -44,6 +44,10 @@ a{color:inherit;text-decoration:none}
 .gray6{color:#4b5563}
 .flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.gap-2{gap:8px}.gap-3{gap:12px}.gap-4{gap:16px}.gap-6{gap:24px}
 .grid{display:grid}.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
+.tier-raffle{position:absolute;top:-12px;right:14px;padding:5px 12px;background:linear-gradient(135deg,#fbbf24,#f97316);color:#0a0a0f;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;border-radius:999px;box-shadow:0 4px 14px rgba(245,158,11,.4);white-space:nowrap;z-index:2}
+.tier-card.free{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04)}
+.tier-card.free .free-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);padding:4px 14px;background:#22c55e;color:#000;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border-radius:999px}
 .relative{position:relative}
 .hidden{display:none}
 
@@ -103,12 +107,14 @@ const { useState, useEffect } = React;
 const API_BASE = window.location.origin;
 
 const TIERS = [
+  { id:"free", name:"Free Taster", price:0, tagline:"A 1-day Nashville highlights pack", popular:false,
+    features:["1-day curated Nashville highlights","Top picks from every neighborhood","Delivered to your inbox","No credit card required","Upgrade anytime to a full trip"] },
   { id:"classic", name:"NashGuide Classic", price:9.99, tagline:"Your personal Nashville blueprint", popular:false,
     features:["Hour-by-hour custom itinerary","Insider tips from locals","Interactive map with all your stops","PDF + mobile-friendly web link","Restaurant & bar recommendations"] },
-  { id:"vip", name:"NashGuide VIP", price:29.99, tagline:"The full Nashville experience", popular:true,
-    features:["Everything in Classic","Live weather forecast for your trip dates","Hidden gems only locals know","Reservation links pre-loaded","Custom Spotify playlist for your trip","Packing list + Nashville survival tips","Priority email support"] },
-  { id:"bach", name:"Bachelorette Pack", price:19.99, tagline:"Nashville bach done right", popular:false,
-    features:["Custom bachelorette itinerary","Bar crawl route mapped out","Best photo op spots","Matching schedule cards (printable)","Party supply checklist","Group dinner recommendations"] }
+  { id:"vip", name:"NashGuide VIP", price:29.99, tagline:"The full Nashville experience", popular:true, raffle:true,
+    features:["🎰 Auto entry in our $10,000 cash giveaway","Everything in Classic","Live weather forecast for your trip dates","Hidden gems only locals know","Reservation links pre-loaded","Custom Spotify playlist for your trip","Packing list + Nashville survival tips","Priority email support"] },
+  { id:"bach", name:"Bachelorette Pack", price:19.99, tagline:"Nashville bach done right", popular:false, raffle:true,
+    features:["🎰 Auto entry in our $10,000 cash giveaway","Custom bachelorette itinerary","Bar crawl route mapped out","Best photo op spots","Matching schedule cards (printable)","Party supply checklist","Group dinner recommendations"] }
 ];
 
 const QUIZ_STEPS = [
@@ -138,8 +144,8 @@ const TESTIMONIALS = [
 const AWARDS = [
   { icon:"\u{1F3C6}", title:"Voted Best Guide to Nashville", sub:"2026" },
   { icon:"\u2B50", title:"Best AI Trip Planner", sub:"3 years running" },
-  { icon:"\u{1F3B8}", title:"10,000+ weekends planned", sub:"Loved by couples, bach groups & first-timers" },
-  { icon:"\u2728", title:"4.9 / 5 average rating", sub:"From travelers in all 50 states" }
+  { icon:"\u{1F3B0}", title:"$10,000 cash giveaway", sub:"Auto entry with every Bach + VIP purchase" },
+  { icon:"\u{1F3B8}", title:"10,000+ weekends planned", sub:"Loved by couples, bach groups & first-timers" }
 ];
 
 const CheckSVG = () => (
@@ -294,20 +300,25 @@ function Landing({ onStart, onWaitlist, waitlistDone }) {
       <section style={{padding:'128px 20px'}}>
         <div className="container text-center">
           <h2 className="playfair" style={{fontSize:48,fontWeight:700,marginBottom:16}}>Less than a <span className="amber" style={{fontStyle:'italic'}}>Broadway beer</span></h2>
-          <p className="gray5" style={{fontSize:18,marginBottom:64}}>You're spending $1,000+ on this trip. Spend $10 to make sure you don't waste it.</p>
-          <div className="grid grid-3 gap-6">
+          <p className="gray5" style={{fontSize:18,marginBottom:24}}>You're spending $1,000+ on this trip. Spend $10 to make sure you don't waste it.</p>
+          <p style={{fontSize:13,color:'#fbbf24',letterSpacing:1.5,textTransform:'uppercase',fontWeight:700,marginBottom:56}}>🎰 Every Bachelorette + VIP purchase is auto-entered to win $10,000</p>
+          <div className="grid-pricing">
             {TIERS.map(tier => (
-              <div key={tier.id} className={`tier-card ${tier.popular?'popular':''}`} onClick={onStart}>
+              <div key={tier.id} className={`tier-card ${tier.popular?'popular':''} ${tier.id==='free'?'free':''}`} style={{position:'relative'}} onClick={onStart}>
                 {tier.popular && <div className="tier-badge">MOST POPULAR</div>}
-                <h3 style={{fontSize:18,fontWeight:700,marginBottom:4}}>{tier.name}</h3>
+                {tier.id==='free' && <div className="free-badge">FREE</div>}
+                {tier.raffle && <div className="tier-raffle">$10K Giveaway Entry</div>}
+                <h3 style={{fontSize:18,fontWeight:700,marginBottom:4,marginTop:tier.raffle?6:0}}>{tier.name}</h3>
                 <p className="gray5" style={{fontSize:14,marginBottom:16}}>{tier.tagline}</p>
-                <div style={{fontSize:40,fontWeight:700,marginBottom:24}}>${tier.price}<span className="gray5" style={{fontSize:16,fontWeight:400}}> one-time</span></div>
+                <div style={{fontSize:40,fontWeight:700,marginBottom:24}}>
+                  {tier.price === 0 ? <span style={{color:'#4ade80'}}>Free</span> : <>${tier.price}<span className="gray5" style={{fontSize:16,fontWeight:400}}> one-time</span></>}
+                </div>
                 <ul style={{listStyle:'none',marginBottom:24}}>
                   {tier.features.map((f,i) => (
                     <li key={i} className="flex items-center gap-2" style={{fontSize:14,color:'#d1d5db',marginBottom:10,textAlign:'left'}}><CheckSVG/>{f}</li>
                   ))}
                 </ul>
-                <button className={`tier-btn ${tier.popular?'tier-btn-primary':'tier-btn-secondary'}`}>Get Started</button>
+                <button className={`tier-btn ${tier.popular?'tier-btn-primary':'tier-btn-secondary'}`}>{tier.id==='free'?'Get it free':'Get Started'}</button>
               </div>
             ))}
           </div>
@@ -397,20 +408,25 @@ function Pricing({ answers, onSelect, onBack }) {
           <CheckSVG/> Your {answers.days||'trip'} {(answers.group||'trip').toLowerCase()} is ready to plan
         </div>
         <h2 className="playfair text-center" style={{fontSize:48,fontWeight:700,marginBottom:12}}>Pick your <span className="amber" style={{fontStyle:'italic'}}>experience</span></h2>
-        <p className="gray5 text-center" style={{marginBottom:48}}>One payment. Instant delivery. No subscriptions.</p>
-        <div className="grid grid-3 gap-6" style={{width:'100%',maxWidth:900}}>
+        <p className="gray5 text-center" style={{marginBottom:10}}>One payment. Instant delivery. No subscriptions.</p>
+        <p style={{fontSize:12,color:'#fbbf24',letterSpacing:1.5,textTransform:'uppercase',fontWeight:700,marginBottom:40,textAlign:'center'}}>🎰 Bachelorette + VIP purchases auto-entered to win $10,000</p>
+        <div className="grid-pricing" style={{width:'100%',maxWidth:1100}}>
           {TIERS.map(tier => (
-            <div key={tier.id} className={`tier-card ${tier.popular?'popular':''}`} onClick={()=>onSelect(tier)}>
+            <div key={tier.id} className={`tier-card ${tier.popular?'popular':''} ${tier.id==='free'?'free':''}`} style={{position:'relative'}} onClick={()=>onSelect(tier)}>
               {tier.popular && <div className="tier-badge">MOST POPULAR</div>}
-              <h3 style={{fontSize:18,fontWeight:700,marginBottom:4}}>{tier.name}</h3>
+              {tier.id==='free' && <div className="free-badge">FREE</div>}
+              {tier.raffle && <div className="tier-raffle">$10K Giveaway Entry</div>}
+              <h3 style={{fontSize:18,fontWeight:700,marginBottom:4,marginTop:tier.raffle?6:0}}>{tier.name}</h3>
               <p className="gray5" style={{fontSize:14,marginBottom:16}}>{tier.tagline}</p>
-              <div style={{fontSize:40,fontWeight:700,marginBottom:24}}>${tier.price}</div>
+              <div style={{fontSize:40,fontWeight:700,marginBottom:24}}>
+                {tier.price === 0 ? <span style={{color:'#4ade80'}}>Free</span> : <>${tier.price}</>}
+              </div>
               <ul style={{listStyle:'none',marginBottom:24}}>
                 {tier.features.map((f,i) => (
                   <li key={i} className="flex items-center gap-2" style={{fontSize:14,color:'#d1d5db',marginBottom:8,textAlign:'left'}}><CheckSVG/>{f}</li>
                 ))}
               </ul>
-              <button className={`tier-btn ${tier.popular?'tier-btn-primary':'tier-btn-secondary'}`}>Choose {tier.name.split(' ').pop()}</button>
+              <button className={`tier-btn ${tier.popular?'tier-btn-primary':'tier-btn-secondary'}`}>{tier.id==='free'?'Send it free':'Choose '+tier.name.split(' ').pop()}</button>
             </div>
           ))}
         </div>
@@ -466,7 +482,37 @@ function Checkout({ tier, quizAnswers, onBack }) {
     }
   };
 
+  const handleFree = async () => {
+    if (!email) return;
+    if(window.ngTrack)window.ngTrack.paymentStart(tier.id, 0);
+    setProcessing(true);
+    try {
+      const res = await fetch(API_BASE + '/api/free/redeem', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          email: email,
+          visit_dates: quizAnswers.dates || 'This weekend',
+          num_days: 1,
+          group_type: quizAnswers.group || 'Friends trip',
+          vibe: quizAnswers.vibe || 'Mix of everything',
+          budget: quizAnswers.budget || 'Budget-friendly',
+          must_dos: quizAnswers.mustdos || '',
+        })
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error('Free redemption failed (' + res.status + '): ' + errText.slice(0, 300));
+      }
+      window.location.href = '/?payment=success';
+    } catch(e) {
+      alert('Free signup failed: ' + (e.message || e));
+      setProcessing(false);
+    }
+  };
+
   const handlePay = async () => {
+    if (tier.id === 'free') return handleFree();
     if (!email) return;
     if(window.ngTrack)window.ngTrack.paymentStart(tier.id, tier.price);
     setProcessing(true);
@@ -533,25 +579,34 @@ function Checkout({ tier, quizAnswers, onBack }) {
         <div className="card" style={{marginBottom:24}}>
           <h3 style={{fontWeight:700,fontSize:18,marginBottom:4}}>{tier.name}</h3>
           <p className="gray5" style={{fontSize:14,marginBottom:16}}>{tier.tagline}</p>
-          <div style={{fontSize:48,fontWeight:700,marginBottom:24}}>${tier.price} <span className="gray5" style={{fontSize:16,fontWeight:400}}>USD</span></div>
+          <div style={{fontSize:48,fontWeight:700,marginBottom:24}}>
+            {tier.price === 0 ? <span style={{color:'#4ade80'}}>Free</span> : <>${tier.price} <span className="gray5" style={{fontSize:16,fontWeight:400}}>USD</span></>}
+          </div>
+          {tier.raffle && (
+            <div style={{padding:'10px 14px',background:'linear-gradient(135deg,rgba(245,158,11,.12),rgba(249,115,22,.08))',border:'1px solid rgba(245,158,11,.35)',borderRadius:10,marginBottom:16,fontSize:13,color:'#fbbf24'}}>
+              🎰 <b>Auto-entered in our $10,000 cash giveaway</b> once your payment clears.
+            </div>
+          )}
           <div style={{marginBottom:16}}>
             <label className="gray4" style={{fontSize:14,display:'block',marginBottom:6}}>Email (we'll send your itinerary here)</label>
             <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com"/>
           </div>
 
-          <div style={{marginBottom:16,padding:12,background:'rgba(245,158,11,.05)',border:'1px dashed rgba(245,158,11,.3)',borderRadius:10}}>
-            <label className="gray4" style={{fontSize:12,display:'block',marginBottom:6,letterSpacing:1,textTransform:'uppercase',fontWeight:600,color:'#fbbf24'}}>Promo / test code</label>
-            <div style={{display:'flex',gap:6}}>
-              <input className="input" type="text" value={promoCode} onChange={e=>{setPromoCode(e.target.value.toUpperCase());setPromoMsg(null);}} placeholder="CODE" style={{flex:1,textTransform:'uppercase',letterSpacing:1,fontFamily:'monospace'}}/>
-              <button onClick={handleApplyPromo} disabled={applyingPromo||!promoCode||!email} style={{padding:'0 16px',background:(applyingPromo||!promoCode||!email)?'rgba(255,255,255,.08)':'rgba(245,158,11,.2)',color:(applyingPromo||!promoCode||!email)?'#666':'#fbbf24',border:'1px solid rgba(245,158,11,.3)',borderRadius:8,fontSize:13,fontWeight:700,cursor:(applyingPromo||!promoCode||!email)?'not-allowed':'pointer',fontFamily:'inherit'}}>{applyingPromo?'…':'Apply'}</button>
+          {tier.id !== 'free' && (
+            <div style={{marginBottom:16,padding:12,background:'rgba(245,158,11,.05)',border:'1px dashed rgba(245,158,11,.3)',borderRadius:10}}>
+              <label className="gray4" style={{fontSize:12,display:'block',marginBottom:6,letterSpacing:1,textTransform:'uppercase',fontWeight:600,color:'#fbbf24'}}>Promo / test code</label>
+              <div style={{display:'flex',gap:6}}>
+                <input className="input" type="text" value={promoCode} onChange={e=>{setPromoCode(e.target.value.toUpperCase());setPromoMsg(null);}} placeholder="CODE" style={{flex:1,textTransform:'uppercase',letterSpacing:1,fontFamily:'monospace'}}/>
+                <button onClick={handleApplyPromo} disabled={applyingPromo||!promoCode||!email} style={{padding:'0 16px',background:(applyingPromo||!promoCode||!email)?'rgba(255,255,255,.08)':'rgba(245,158,11,.2)',color:(applyingPromo||!promoCode||!email)?'#666':'#fbbf24',border:'1px solid rgba(245,158,11,.3)',borderRadius:8,fontSize:13,fontWeight:700,cursor:(applyingPromo||!promoCode||!email)?'not-allowed':'pointer',fontFamily:'inherit'}}>{applyingPromo?'…':'Apply'}</button>
+              </div>
+              {promoMsg && (
+                <div style={{marginTop:8,fontSize:12,color:promoMsg.type==='err'?'#ff6b7a':'#4ade80'}}>{promoMsg.text}</div>
+              )}
             </div>
-            {promoMsg && (
-              <div style={{marginTop:8,fontSize:12,color:promoMsg.type==='err'?'#ff6b7a':'#4ade80'}}>{promoMsg.text}</div>
-            )}
-          </div>
+          )}
 
-          <button onClick={handlePay} disabled={!email||processing} style={{width:'100%',padding:16,background:(!email||processing)?'rgba(255,255,255,.1)':'linear-gradient(to right,#f59e0b,#f97316)',color:(!email||processing)?'#666':'#000',fontWeight:700,border:'none',borderRadius:12,fontSize:14,cursor:(!email||processing)?'not-allowed':'pointer',fontFamily:'inherit'}}>
-            {processing ? 'Processing...' : `Pay $${tier.price} with PayPal`}
+          <button onClick={handlePay} disabled={!email||processing} style={{width:'100%',padding:16,background:(!email||processing)?'rgba(255,255,255,.1)':(tier.id==='free'?'linear-gradient(to right,#22c55e,#16a34a)':'linear-gradient(to right,#f59e0b,#f97316)'),color:(!email||processing)?'#666':'#000',fontWeight:700,border:'none',borderRadius:12,fontSize:14,cursor:(!email||processing)?'not-allowed':'pointer',fontFamily:'inherit'}}>
+            {processing ? 'Processing...' : (tier.id==='free' ? 'Send me my free 1-day guide →' : `Pay $${tier.price} with PayPal`)}
           </button>
         </div>
         <div className="flex items-center justify-center gap-4 gray6" style={{fontSize:12,flexWrap:'wrap'}}>

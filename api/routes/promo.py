@@ -75,6 +75,84 @@ def _validate_promo(db: Session, code: str, product_type: str) -> PromoCode:
     return promo
 
 
+class FreeRedeem(BaseModel):
+    """Free-tier lead-magnet. Same shape as PromoApply but no code needed."""
+    email: EmailStr
+    name: str | None = None
+    visit_dates: str
+    num_days: int = 1
+    group_type: str
+    vibe: str
+    budget: str
+    must_dos: str | None = None
+
+
+@router.post("/api/free/redeem")
+def redeem_free(payload: FreeRedeem, db: Session = Depends(get_db)):
+    """Free tier — 1-day Nashville taster. No payment, no promo code. Email required.
+
+    Creates a paid $0 order tagged FREE:<cid> and enqueues a full planner run
+    (capped at 1 day) so the customer gets a real itinerary. The weather
+    strip and VIP bonuses stay gated to VIP tier so free doesn't cannibalize.
+    """
+    customer = db.query(Customer).filter(Customer.email == payload.email).first()
+    if not customer:
+        customer = Customer(email=payload.email, name=payload.name, source="free")
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+
+    # Free tier is always 1 day — clamp whatever the quiz answered.
+    num_days = 1
+
+    quiz_data = payload.model_dump()
+    quiz_data["product_type"] = "free"
+    quiz_data["num_days"] = num_days
+
+    quiz = QuizResponse(
+        visit_dates=payload.visit_dates,
+        num_days=num_days,
+        group_type=payload.group_type,
+        vibe=payload.vibe,
+        budget=payload.budget,
+        must_dos=payload.must_dos,
+        raw_json=quiz_data,
+    )
+    db.add(quiz)
+    db.commit()
+    db.refresh(quiz)
+
+    order = Order(
+        customer_id=customer.id,
+        product_type="free",
+        amount=0.0,
+        status="paid",
+        paypal_order_id=f"FREE:{customer.id}",
+    )
+    db.add(order)
+    db.commit()
+    db.refresh(order)
+
+    quiz.order_id = order.id
+    db.commit()
+
+    try:
+        _redis.rpush("nashguide:jobs:itinerary", json.dumps({"order_id": order.id}))
+    except Exception:
+        log.exception("Failed to enqueue free itinerary (order_id=%s)", order.id)
+
+    log.info("Free-tier redemption: order_id=%s customer_id=%s", order.id, customer.id)
+
+    return {
+        "success": True,
+        "free": True,
+        "order_id": order.id,
+        "customer_id": customer.id,
+        "quiz_response_id": quiz.id,
+        "message": "Your free 1-day Nashville taster is being built — check your email in a minute.",
+    }
+
+
 @router.post("/api/promo/apply")
 def apply_promo(payload: PromoApply, db: Session = Depends(get_db)):
     """Redeem a free promo code end-to-end: validate → quiz → paid order → enqueue."""
