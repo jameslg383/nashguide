@@ -1,0 +1,20 @@
+{% extends "admin_social/_base.html" %}
+{% block title %}Scrape{% endblock %}
+{% block content %}
+<h1>Scrape a venue page</h1>
+<p style="color:#9ca3af">Hits the LLM, extracts structured specials, drops them into the moderation queue. Never writes live data.</p>
+<form method="post" action="/admin/social/scrape?key={{ key }}" style="display:flex; gap:8px; margin-top:16px">
+  <input name="url" placeholder="https://venue.example/happy-hour" value="{{ url or '' }}" style="flex:1">
+  <button type="submit">Scrape</button>
+</form>
+{% if error %}
+<div style="background:rgba(200,16,46,.15); border:1px solid #c8102e; padding:14px; border-radius:8px; margin-top:18px">
+  <strong>Error:</strong> {{ error }}
+</div>
+{% endif %}
+{% if result %}
+<h2 style="margin-top:24px; font-size:16px">Extracted (queued for review)</h2>
+<pre>{{ result | tojson(indent=2) }}</pre>
+<p><a href="/admin/social/submissions?key={{ key }}">→ Review in submissions queue</a></p>
+{% endif %}
+{% endblock %}

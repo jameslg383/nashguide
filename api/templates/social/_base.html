@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}NashGuide Social — Nashville Happy Hours & Drink Specials{% endblock %}</title>
+<meta name="description" content="{% block description %}The definitive guide to Nashville happy hours, drink specials, food deals, and venue specials — updated daily.{% endblock %}">
+{% block og %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="{% block og_title %}NashGuide Social{% endblock %}">
+<meta property="og:description" content="{% block og_description %}Nashville happy hours & drink specials, live.{% endblock %}">
+<meta property="og:site_name" content="NashGuide">
+{% endblock %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0f; --bg2:#15151b; --card:#1c1c24; --card-hover:#22222a;
+    --border:#2a2a30; --ink:#f4f4f4; --muted:#9ca3af; --muted2:#6b7280;
+    --amber:#f59e0b; --amber2:#f97316; --red:#c8102e; --green:#22c55e;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { background:var(--bg); color:var(--ink); }
+  body { font-family:'DM Sans', sans-serif; -webkit-font-smoothing:antialiased; line-height:1.55; min-height:100vh; padding-bottom:80px; }
+  a { color:inherit; text-decoration:none; }
+  .playfair { font-family:'Playfair Display', serif; }
+  button, input, select, textarea { font-family:inherit; }
+
+  .nav { position:sticky; top:0; z-index:30; background:rgba(10,10,15,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+  .nav-inner { max-width:1100px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+  .brand { color:var(--amber); font-weight:800; letter-spacing:1px; text-transform:uppercase; font-size:14px; }
+  .nav-links { display:flex; gap:18px; font-size:14px; color:var(--muted); flex-wrap:wrap; }
+  .nav-links a:hover { color:var(--ink); }
+
+  .wrap { max-width:1100px; margin:0 auto; padding:24px 20px; }
+  .hero { padding:42px 20px 28px; text-align:center; background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,158,11,.18), transparent 70%), linear-gradient(to bottom, #0a0a0f, #15151b); }
+  .hero h1 { font-size:clamp(28px, 5vw, 44px); font-weight:800; }
+  .hero p { color:var(--muted); margin-top:10px; max-width:640px; margin-left:auto; margin-right:auto; }
+
+  .pill { display:inline-block; padding:4px 10px; border-radius:999px; background:#23232b; border:1px solid var(--border); font-size:11px; color:var(--muted); margin:2px; }
+  .pill.amber { background:rgba(245,158,11,.15); color:var(--amber); border-color:rgba(245,158,11,.3); }
+  .pill.green { background:rgba(34,197,94,.15); color:var(--green); border-color:rgba(34,197,94,.3); }
+  .pill.red { background:rgba(200,16,46,.15); color:#ff9aa5; border-color:rgba(200,16,46,.3); }
+
+  .grid { display:grid; gap:16px; }
+  .grid.cols-3 { grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); }
+  .grid.cols-2 { grid-template-columns:repeat(auto-fill, minmax(360px, 1fr)); }
+
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; transition:background .15s ease, transform .15s ease; }
+  .card:hover { background:var(--card-hover); }
+  .card h3 { font-size:18px; font-weight:700; margin-bottom:6px; }
+  .card .meta { color:var(--muted); font-size:13px; margin-bottom:8px; }
+
+  .btn { display:inline-block; padding:10px 16px; border-radius:8px; background:linear-gradient(to right, var(--amber), var(--amber2)); color:#000; font-weight:700; border:none; cursor:pointer; }
+  .btn.secondary { background:transparent; color:var(--ink); border:1px solid var(--border); }
+  .btn:hover { transform:translateY(-1px); }
+
+  .filterbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .filterbar select, .filterbar input { background:#0f0f13; color:var(--ink); border:1px solid var(--border); border-radius:8px; padding:9px 12px; font-size:14px; }
+
+  .tag-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  table th, table td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); }
+
+  .happy-now-strip { background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(200,16,46,.12)); border:1px solid rgba(245,158,11,.3); border-radius:14px; padding:18px 20px; margin-bottom:24px; }
+  .happy-now-strip h2 { font-size:20px; font-weight:800; margin-bottom:4px; }
+  .happy-now-strip .count { color:var(--amber); font-size:32px; font-weight:800; }
+
+  .ad-slot { background:#11111a; border:1px dashed var(--border); border-radius:12px; padding:18px; text-align:center; margin:20px 0; }
+  .ad-slot .ad-label { font-size:10px; color:var(--muted2); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+  .ad-slot a { color:var(--amber); font-weight:700; }
+
+  .happy-pill { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:40; background:linear-gradient(to right, var(--amber), var(--amber2)); color:#000; font-weight:800; padding:12px 20px; border-radius:999px; box-shadow:0 12px 30px rgba(245,158,11,.35); cursor:pointer; border:none; font-size:14px; }
+  .drawer { position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border); border-radius:18px 18px 0 0; padding:20px; max-height:75vh; overflow-y:auto; transform:translateY(100%); transition:transform .25s ease; z-index:50; }
+  .drawer.open { transform:translateY(0); }
+  .drawer-handle { width:44px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 14px; }
+  .drawer h3 { margin-bottom:12px; }
+
+  footer { color:var(--muted); font-size:12px; text-align:center; padding:30px 20px 80px; }
+</style>
+{% block head_extra %}{% endblock %}
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/social">NashGuide · Social</a>
+    <div class="nav-links">
+      <a href="/social">Happy Now</a>
+      <a href="/social/happy-hours">Schedule</a>
+      <a href="/social/venues">Venues</a>
+      <a href="/social/parking">Parking</a>
+      <a href="/social/submit">Submit</a>
+    </div>
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<button class="happy-pill" id="happyPill" type="button">⏰ Happy Now</button>
+<div class="drawer" id="happyDrawer" aria-hidden="true">
+  <div class="drawer-handle"></div>
+  <h3>What's happy right now</h3>
+  <div id="happyDrawerBody">Loading…</div>
+</div>
+
+<footer>
+  © NashGuide · <a href="/social/advertise" style="color:var(--amber)">Advertise on Social</a> ·
+  <a href="/" style="color:var(--muted)">NashGuide.online</a>
+</footer>
+
+<script>
+  (function() {
+    const pill = document.getElementById('happyPill');
+    const drawer = document.getElementById('happyDrawer');
+    const body = document.getElementById('happyDrawerBody');
+    let loaded = false;
+
+    function open() {
+      drawer.classList.add('open');
+      drawer.setAttribute('aria-hidden', 'false');
+      if (!loaded) {
+        fetch('/social/now').then(r => r.json()).then(d => {
+          if (!d.specials || !d.specials.length) {
+            body.innerHTML = '<p style="color:var(--muted)">Nothing currently active. Check back at 4pm.</p>';
+            return;
+          }
+          body.innerHTML = d.specials.slice(0, 12).map(s => `
+            <div class="card" style="margin-bottom:10px">
+              <h3>${s.title}</h3>
+              <div class="meta">${s.venue ? s.venue.name + ' · ' + s.venue.neighborhood : ''}</div>
+              ${s.discount_value ? '<div>'+s.discount_value+'</div>' : ''}
+              ${s.ends_in_min !== null ? '<div class="pill amber">Ends in '+s.ends_in_min+' min</div>' : ''}
+              ${s.venue ? '<div style="margin-top:8px"><a class="pill" href="/social/venues/'+s.venue.slug+'">Open venue</a></div>' : ''}
+            </div>`).join('');
+          loaded = true;
+        }).catch(() => { body.innerHTML = '<p>Could not load.</p>'; });
+      }
+    }
+
+    function close() {
+      drawer.classList.remove('open');
+      drawer.setAttribute('aria-hidden', 'true');
+    }
+
+    pill.addEventListener('click', open);
+    document.addEventListener('click', (e) => {
+      if (drawer.classList.contains('open') && !drawer.contains(e.target) && e.target !== pill) close();
+    });
+  })();
+</script>
+{% block body_extra %}{% endblock %}
+</body>
+</html>

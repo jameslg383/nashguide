@@ -27,9 +27,11 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = "dev-secret"
     admin_key: str = "dev-admin"  # reads ADMIN_KEY env var — legacy ?key= auth
+    nashguide_admin_key: str = ""  # reads NASHGUIDE_ADMIN_KEY — used by /admin/social/*
     admin_user: str = "admin"     # session login username
     admin_pass: str = "admin"     # session login password
     site_url: str = "http://localhost:8080"  # reads SITE_URL env var
+    social_default_tz: str = "America/Chicago"  # for "happy now" calculations
 
     MARKETING_ENABLED: bool = True
     MARKETING_TWEETS_PER_DAY: int = 3

@@ -1,0 +1,46 @@
+{% extends "admin_social/_base.html" %}
+{% block title %}Ads{% endblock %}
+{% block content %}
+<h1>Ad placements ({{ ads|length }}) — <a href="/admin/social/ads/export?key={{ key }}">CSV export</a></h1>
+
+<h2 style="margin-top:24px; font-size:16px">Create new placement</h2>
+<form method="post" action="/admin/social/ads?key={{ key }}" style="display:grid; gap:8px; max-width:560px; background:#15151b; padding:16px; border-radius:8px">
+  <input name="advertiser_name" placeholder="Advertiser name" required>
+  <input name="contact_email" placeholder="Contact email" type="email">
+  <select name="placement_slot" required>
+    {% for slot in slots %}<option value="{{ slot }}">{{ slot }}</option>{% endfor %}
+  </select>
+  <input name="target_neighborhood" placeholder="Target neighborhood (optional)">
+  <input name="target_vibe_tag" placeholder="Target vibe tag (optional)">
+  <input name="creative_url" placeholder="Creative image URL (optional)">
+  <input name="click_url" placeholder="Click destination URL" required>
+  <input name="headline" placeholder="Headline">
+  <input name="subheadline" placeholder="Subheadline">
+  <input name="monthly_rate_cents" placeholder="Monthly rate (cents)" type="number">
+  <button type="submit">Create</button>
+</form>
+
+<table style="margin-top:30px">
+  <thead><tr><th>ID</th><th>Advertiser</th><th>Slot</th><th>Targeting</th><th>Headline</th><th>Imp</th><th>Clk</th><th>CTR</th><th>Active</th><th></th></tr></thead>
+  <tbody>
+  {% for ad in ads %}
+    <tr>
+      <td>{{ ad.id }}</td>
+      <td>{{ ad.advertiser_name }}<br><small style="color:#6b7280">{{ ad.contact_email or '' }}</small></td>
+      <td>{{ ad.placement_slot }}</td>
+      <td>{{ ad.target_neighborhood or '—' }} / {{ ad.target_vibe_tag or '—' }}</td>
+      <td>{{ ad.headline or '' }}</td>
+      <td>{{ ad.impressions }}</td>
+      <td>{{ ad.clicks }}</td>
+      <td>{% if ad.impressions %}{{ '%.1f' | format(ad.clicks / ad.impressions * 100) }}%{% else %}—{% endif %}</td>
+      <td>{{ '✔' if ad.active else '—' }}</td>
+      <td>
+        <form class="inline" method="post" action="/admin/social/ads/{{ ad.id }}/toggle?key={{ key }}">
+          <button class="secondary" type="submit">{{ 'Pause' if ad.active else 'Resume' }}</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

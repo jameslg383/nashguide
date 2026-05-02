@@ -1,0 +1,112 @@
+{% extends "social/_base.html" %}
+{% block title %}Happy Hour at {{ venue.name }} — Nashville | NashGuide{% endblock %}
+{% block description %}{{ venue.description or (venue.name ~ " in " ~ venue.neighborhood ~ ", Nashville. Today's happy hours, hours, and address.") }}{% endblock %}
+{% block og_title %}{{ venue.name }} — {{ venue.neighborhood }}, Nashville{% endblock %}
+{% block og_description %}Happy hour, hours, and specials at {{ venue.name }}.{% endblock %}
+{% block head_extra %}
+<script type="application/ld+json">{{ jsonld | tojson }}</script>
+{% endblock %}
+{% block content %}
+<div class="wrap">
+  <a href="/social" style="color:var(--muted); font-size:13px">← Back to Social</a>
+  <h1 class="playfair" style="font-size:32px; margin-top:8px">{{ venue.name }}</h1>
+  <div class="meta" style="color:var(--muted); margin-bottom:8px">
+    {{ venue.neighborhood }} · {{ '$' * venue.price_tier }} · {{ venue.venue_type.replace('_', ' ') }}
+    {% if venue.verified %}<span class="pill green">Verified</span>
+    {% else %}<span class="pill">Unverified</span>{% endif %}
+    {% if days_since_verify is not none %}<span class="pill">Last checked {{ days_since_verify }}d ago</span>{% endif %}
+  </div>
+  <div class="tag-row">
+    {% for t in venue.vibe_tags or [] %}<span class="pill">{{ t.replace('_', ' ') }}</span>{% endfor %}
+  </div>
+
+  {% if venue.description %}
+  <p style="color:var(--ink); margin:18px 0">{{ venue.description }}</p>
+  {% endif %}
+
+  {% if today_specials %}
+  <div class="happy-now-strip">
+    <h2 style="margin-bottom:10px">Today's specials</h2>
+    {% for s in today_specials %}
+    <div style="margin-bottom:10px">
+      <strong>{{ s.title }}</strong>
+      {% if is_active(s) %}<span class="pill green">Active now{% if ends_in_min(s) %} — ends in {{ ends_in_min(s) }} min{% endif %}</span>{% endif %}
+      <div style="color:var(--muted); font-size:13px">
+        {% if s.start_time and s.end_time %}{{ format_time(s.start_time) }}–{{ format_time(s.end_time) }} · {% endif %}
+        {{ s.deal_type.replace('_', ' ') }}
+      </div>
+      {% if s.description %}<div style="color:var(--muted); font-size:13px">{{ s.description }}</div>{% endif %}
+      {% if s.discount_value %}<div>{{ s.discount_value }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if ad %}
+  <div class="ad-slot">
+    <div class="ad-label">Sponsored</div>
+    <a href="/social/ad/{{ ad.id }}/click">
+      <strong>{{ ad.headline or ad.advertiser_name }}</strong>
+      {% if ad.subheadline %}<div style="color:var(--muted); font-size:13px">{{ ad.subheadline }}</div>{% endif %}
+    </a>
+  </div>
+  {% endif %}
+
+  <h2 class="playfair" style="font-size:22px; margin:28px 0 12px">Full week schedule</h2>
+  <table>
+    <thead><tr><th>Day</th><th>Specials</th></tr></thead>
+    <tbody>
+      {% for i in range(7) %}
+      <tr>
+        <td><strong>{{ day_labels[i] }}</strong></td>
+        <td>
+          {% if by_day[i] %}
+          {% for s in by_day[i] %}
+          <div style="margin-bottom:6px">
+            <strong>{{ s.title }}</strong>
+            {% if s.start_time and s.end_time %} <span style="color:var(--muted); font-size:12px">{{ format_time(s.start_time) }}–{{ format_time(s.end_time) }}</span>{% endif %}
+            {% if s.discount_value %} — {{ s.discount_value }}{% endif %}
+          </div>
+          {% endfor %}
+          {% else %}
+          <span style="color:var(--muted2)">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2 class="playfair" style="font-size:22px; margin:28px 0 12px">Hours & contact</h2>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:14px">
+    <div class="card">
+      <h3 style="font-size:14px">Address</h3>
+      <p style="color:var(--muted); font-size:13px">{{ venue.address or '—' }}</p>
+      {% if venue.lat and venue.lng %}
+      <a class="pill amber" href="https://maps.google.com/?q={{ venue.lat }},{{ venue.lng }}" target="_blank" rel="noopener">Open in Maps</a>
+      {% endif %}
+    </div>
+    <div class="card">
+      <h3 style="font-size:14px">Contact</h3>
+      <p style="color:var(--muted); font-size:13px">
+        {% if venue.phone %}{{ venue.phone }}<br>{% endif %}
+        {% if venue.website %}<a href="{{ venue.website }}" target="_blank" rel="noopener" style="color:var(--amber)">Website</a><br>{% endif %}
+        {% if venue.instagram %}<a href="https://instagram.com/{{ venue.instagram.lstrip('@') }}" target="_blank" rel="noopener" style="color:var(--amber)">@{{ venue.instagram.lstrip('@') }}</a>{% endif %}
+      </p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:14px">Weekly hours</h3>
+      <table style="font-size:12px">
+        {% for d, label in [('monday','Mon'),('tuesday','Tue'),('wednesday','Wed'),('thursday','Thu'),('friday','Fri'),('saturday','Sat'),('sunday','Sun')] %}
+        {% set h = (venue.hours_json or {}).get(d) %}
+        <tr><td>{{ label }}</td><td>{% if h %}{{ h.open }}–{{ h.close }}{% else %}—{% endif %}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-top:30px">
+    <a class="btn secondary" href="/social/submit?venue_slug={{ venue.slug }}&type=correction">Report a change</a>
+  </div>
+</div>
+{% endblock %}

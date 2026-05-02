@@ -1,0 +1,26 @@
+{% extends "admin_social/_base.html" %}
+{% block title %}Specials{% endblock %}
+{% block content %}
+<h1>Specials ({{ specials|length }})</h1>
+<form method="post" action="/admin/social/specials/bulk-deactivate-stale?key={{ key }}" style="margin-bottom:14px">
+  <button class="danger" type="submit" onclick="return confirm('Deactivate all specials >90 days unverified?')">Bulk-deactivate stale (>90d)</button>
+</form>
+<table>
+  <thead><tr><th>ID</th><th>Venue</th><th>Title</th><th>Days</th><th>Time</th><th>Type</th><th>Source</th><th>Verified</th><th>Active</th></tr></thead>
+  <tbody>
+  {% for s in specials %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td>{{ s.venue.name if s.venue else '—' }}</td>
+      <td>{{ s.title }}</td>
+      <td>{{ s.days_of_week | join(',') }}</td>
+      <td>{{ format_time(s.start_time) }}{% if s.end_time %}–{{ format_time(s.end_time) }}{% endif %}</td>
+      <td>{{ s.deal_type }}</td>
+      <td>{{ s.source }}</td>
+      <td>{% if s.last_verified_at %}{{ s.last_verified_at.strftime('%Y-%m-%d') }}{% else %}<span style="color:#c8102e">never</span>{% endif %}</td>
+      <td>{{ '✔' if s.active else '—' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

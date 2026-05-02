@@ -1,0 +1,60 @@
+{% extends "social/_base.html" %}
+{% block title %}Nashville Bars & Restaurants — NashGuide Social{% endblock %}
+{% block description %}Browse {{ total }} Nashville venues by neighborhood, vibe, and happy-hour status.{% endblock %}
+{% block content %}
+<div class="wrap">
+  <h1 class="playfair" style="font-size:32px; margin-bottom:14px">Nashville venues</h1>
+  <form class="filterbar" method="get">
+    <input type="text" name="q" placeholder="Search name…" value="{{ filters.q or '' }}">
+    <select name="neighborhood">
+      <option value="">All neighborhoods</option>
+      {% for n in neighborhoods %}
+      <option value="{{ n }}" {% if filters.neighborhood == n %}selected{% endif %}>{{ n }}</option>
+      {% endfor %}
+    </select>
+    <select name="type">
+      <option value="">All types</option>
+      {% for t in venue_types %}
+      <option value="{{ t }}" {% if filters.type == t %}selected{% endif %}>{{ t.replace('_', ' ') }}</option>
+      {% endfor %}
+    </select>
+    <select name="vibe">
+      <option value="">Any vibe</option>
+      {% for v in vibe_tags %}
+      <option value="{{ v }}" {% if filters.vibe == v %}selected{% endif %}>{{ v.replace('_', ' ') }}</option>
+      {% endfor %}
+    </select>
+    <label style="display:flex; align-items:center; gap:6px; color:var(--muted)">
+      <input type="checkbox" name="has_happy_hour" value="true" {% if filters.has_happy_hour %}checked{% endif %}> Has happy hour
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; color:var(--muted)">
+      <input type="checkbox" name="open_now" value="true" {% if filters.open_now %}checked{% endif %}> Open now
+    </label>
+    <button class="btn" type="submit">Filter</button>
+  </form>
+
+  <p style="color:var(--muted); font-size:13px; margin-bottom:14px">{{ total }} result{{ '' if total == 1 else 's' }}</p>
+
+  <div class="grid cols-3">
+    {% for v in venues %}
+    <a class="card" href="/social/venues/{{ v.slug }}">
+      <h3>{{ v.name }}{% if v.featured %} <span class="pill amber">Featured</span>{% endif %}</h3>
+      <div class="meta">{{ v.neighborhood }} · {{ '$' * v.price_tier }} · {{ v.venue_type.replace('_', ' ') }}</div>
+      {% if v.description %}<p style="color:var(--muted); font-size:13px">{{ v.description[:140] }}{% if v.description|length > 140 %}…{% endif %}</p>{% endif %}
+      <div class="tag-row">
+        {% for t in (v.vibe_tags or [])[:4] %}<span class="pill">{{ t.replace('_', ' ') }}</span>{% endfor %}
+      </div>
+    </a>
+    {% else %}
+    <p style="color:var(--muted)">No venues match those filters.</p>
+    {% endfor %}
+  </div>
+
+  {% if has_prev or has_next %}
+  <div style="display:flex; gap:12px; justify-content:center; margin-top:24px">
+    {% if has_prev %}<a class="btn secondary" href="?{{ {'page': page - 1, 'q': filters.q or '', 'neighborhood': filters.neighborhood or '', 'type': filters.type or '', 'vibe': filters.vibe or ''}|urlencode }}">← Prev</a>{% endif %}
+    {% if has_next %}<a class="btn secondary" href="?{{ {'page': page + 1, 'q': filters.q or '', 'neighborhood': filters.neighborhood or '', 'type': filters.type or '', 'vibe': filters.vibe or ''}|urlencode }}">Next →</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

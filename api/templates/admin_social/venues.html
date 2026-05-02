@@ -1,0 +1,30 @@
+{% extends "admin_social/_base.html" %}
+{% block title %}Venues{% endblock %}
+{% block content %}
+<h1>Venues ({{ venues|length }})</h1>
+<table>
+  <thead><tr><th>ID</th><th>Name</th><th>Slug</th><th>Hood</th><th>Type</th><th>$$</th><th>Verified</th><th>Active</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for v in venues %}
+    <tr>
+      <td>{{ v.id }}</td>
+      <td><a href="/social/venues/{{ v.slug }}" target="_blank">{{ v.name }}</a></td>
+      <td><code>{{ v.slug }}</code></td>
+      <td>{{ v.neighborhood }}</td>
+      <td>{{ v.venue_type }}</td>
+      <td>{{ '$' * v.price_tier }}</td>
+      <td>{{ '✔' if v.verified else '—' }}{% if v.last_verified_at %}<br><small style="color:#6b7280">{{ v.last_verified_at.strftime('%Y-%m-%d') }}</small>{% endif %}</td>
+      <td>{{ '✔' if v.active else '—' }}</td>
+      <td>
+        <form class="inline" method="post" action="/admin/social/venues/{{ v.id }}/verify?key={{ key }}">
+          <button type="submit">Verify</button>
+        </form>
+        <form class="inline" method="post" action="/admin/social/venues/{{ v.id }}/toggle?key={{ key }}">
+          <button class="secondary" type="submit">{{ 'Hide' if v.active else 'Show' }}</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "social/_base.html" %}
+{% block title %}Submit a Venue or Special — NashGuide Social{% endblock %}
+{% block description %}Spotted a happy hour we're missing? Tell us — we'll review and add it.{% endblock %}
+{% block content %}
+<div class="wrap">
+  <h1 class="playfair" style="font-size:32px; margin-bottom:14px">Submit to NashGuide Social</h1>
+  <p style="color:var(--muted); margin-bottom:18px">All submissions go to a moderation queue. We typically review within 24h.</p>
+
+  <form method="post" action="/social/submit" class="card" style="display:grid; gap:12px; max-width:680px">
+    <input type="hidden" name="loaded_at" value="{{ loaded_at }}">
+    <!-- Honeypot — must stay empty. CSS-hidden, screen-readers will skip it. -->
+    <div style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden" aria-hidden="true">
+      <label>Website (leave blank)<input type="text" name="website_url" tabindex="-1" autocomplete="off"></label>
+    </div>
+
+    <label>What are you submitting?
+      <select name="submission_type" required style="width:100%; margin-top:4px">
+        <option value="new_venue">A new venue</option>
+        <option value="new_special">A new happy hour / special</option>
+        <option value="correction">Correction to existing info</option>
+        <option value="closed">Venue is closed / gone</option>
+      </select>
+    </label>
+
+    <label>Your email (optional, for follow-up)
+      <input type="email" name="submitter_email" placeholder="you@example.com" style="width:100%">
+    </label>
+
+    <label>Venue name
+      <input type="text" name="name" required style="width:100%">
+    </label>
+
+    <label>Neighborhood
+      <select name="neighborhood" style="width:100%">
+        {% for n in neighborhoods %}<option value="{{ n }}">{{ n }}</option>{% endfor %}
+      </select>
+    </label>
+
+    <label>Venue type
+      <select name="venue_type" style="width:100%">
+        {% for t in venue_types %}<option value="{{ t }}">{{ t.replace('_', ' ') }}</option>{% endfor %}
+      </select>
+    </label>
+
+    <label>Address (optional)
+      <input type="text" name="address" style="width:100%">
+    </label>
+
+    <label>Existing venue slug (only for "new special" or "correction")
+      <input type="text" name="venue_slug" placeholder="e.g. the-bowery-vault" style="width:100%">
+    </label>
+
+    <label>Special title (e.g. "$5 Wells & Wines")
+      <input type="text" name="title" style="width:100%">
+    </label>
+
+    <label>Days (comma-separated, Mon=0…Sun=6 — e.g. "0,1,2,3,4")
+      <input type="text" name="days_of_week" style="width:100%">
+    </label>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+      <label>Start time
+        <input type="time" name="start_time" style="width:100%">
+      </label>
+      <label>End time
+        <input type="time" name="end_time" style="width:100%">
+      </label>
+    </div>
+
+    <label>Deal type
+      <select name="deal_type" style="width:100%">
+        <option value="drink">Drink</option>
+        <option value="food">Food</option>
+        <option value="both">Both</option>
+        <option value="bogo">BOGO</option>
+        <option value="flat_price">Flat price</option>
+        <option value="percent_off">% off</option>
+      </select>
+    </label>
+
+    <label>Discount value (e.g. "$5 wells", "Half-priced bottles")
+      <input type="text" name="discount_value" style="width:100%">
+    </label>
+
+    <label>Anything else? Notes for our reviewer.
+      <textarea name="description" rows="3" style="width:100%"></textarea>
+    </label>
+
+    <button class="btn" type="submit">Submit</button>
+    <p style="color:var(--muted); font-size:12px">Spam will be discarded. We don't share emails.</p>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "social/_base.html" %}
+{% block title %}Nashville Happy Hours Right Now — NashGuide Social{% endblock %}
+{% block description %}{{ happy_now_count }} Nashville bars and restaurants are running happy hour, drink specials, or food deals right now.{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1 class="playfair">What's <span style="color:var(--amber)">happy</span> right now in Nashville?</h1>
+  <p>Live count of bars, breweries, and rooftops running specials this exact minute. Tap any card for the deal and the closeout time.</p>
+</section>
+
+<div class="wrap">
+  <div class="happy-now-strip">
+    <div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap">
+      <div class="count">{{ happy_now_count }}</div>
+      <div>
+        <h2>specials are live</h2>
+        <div style="color:var(--muted); font-size:13px">{{ day_label }} · {{ now.strftime('%-I:%M %p') }} CT</div>
+      </div>
+      <a href="/social/happy-hours" class="btn secondary" style="margin-left:auto">Full schedule →</a>
+    </div>
+  </div>
+
+  {% if ad %}
+  <div class="ad-slot">
+    <div class="ad-label">Sponsored</div>
+    <a href="/social/ad/{{ ad.id }}/click">
+      <strong>{{ ad.headline or ad.advertiser_name }}</strong>
+      {% if ad.subheadline %}<div style="color:var(--muted); font-size:13px">{{ ad.subheadline }}</div>{% endif %}
+    </a>
+  </div>
+  {% endif %}
+
+  <h2 class="playfair" style="font-size:24px; margin:28px 0 14px">Happening right now</h2>
+  {% if happy_now %}
+  <div class="grid cols-3">
+    {% for s in happy_now %}
+    <a class="card" href="/social/venues/{{ s.venue.slug }}">
+      <h3>{{ s.title }}</h3>
+      <div class="meta">{{ s.venue.name }} · {{ s.venue.neighborhood }}</div>
+      {% if s.discount_value %}<div style="margin:6px 0">{{ s.discount_value }}</div>{% endif %}
+      <div class="tag-row">
+        {% set ends = ends_in_min(s) %}
+        {% if ends is not none %}<span class="pill amber">Ends in {{ ends }} min</span>{% endif %}
+        {% if s.start_time and s.end_time %}<span class="pill">{{ format_time(s.start_time) }}–{{ format_time(s.end_time) }}</span>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color:var(--muted)">Nothing's running this exact minute. <a href="/social/happy-hours" style="color:var(--amber)">See what's coming up →</a></p>
+  {% endif %}
+
+  {% if featured_venues %}
+  <h2 class="playfair" style="font-size:24px; margin:32px 0 14px">Featured venues</h2>
+  <div class="grid cols-3">
+    {% for v in featured_venues %}
+    <a class="card" href="/social/venues/{{ v.slug }}">
+      <h3>{{ v.name }}</h3>
+      <div class="meta">{{ v.neighborhood }} · {{ '$' * v.price_tier }} · {{ v.venue_type.replace('_', ' ') }}</div>
+      <div class="tag-row">
+        {% for t in (v.vibe_tags or [])[:3] %}<span class="pill">{{ t.replace('_', ' ') }}</span>{% endfor %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <h2 class="playfair" style="font-size:24px; margin:32px 0 14px">Browse by neighborhood</h2>
+  <div class="grid cols-3">
+    {% for name, count in neighborhoods %}
+    {% if count %}
+    <a class="card" href="/social/neighborhoods/{{ slugify(name) }}">
+      <h3>{{ name }}</h3>
+      <div class="meta">{{ count }} venue{{ '' if count == 1 else 's' }}</div>
+    </a>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <h2 class="playfair" style="font-size:24px; margin:32px 0 14px">Browse by vibe</h2>
+  <div class="tag-row">
+    {% for t in vibe_tags %}
+    <a class="pill amber" href="/social/venues?vibe={{ t }}">{{ t.replace('_', ' ') }}</a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

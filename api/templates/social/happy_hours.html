@@ -1,0 +1,46 @@
+{% extends "social/_base.html" %}
+{% block title %}Nashville Happy Hour Schedule — {{ day_labels_full[day] }} | NashGuide Social{% endblock %}
+{% block description %}Every Nashville happy hour we know about, time-slotted for {{ day_labels_full[day] }}. Filter by neighborhood.{% endblock %}
+{% block content %}
+<div class="wrap">
+  <h1 class="playfair" style="font-size:32px; margin-bottom:14px">Happy Hour Schedule</h1>
+
+  <div class="filterbar">
+    {% for i in range(7) %}
+    <a class="pill {% if i == day %}amber{% endif %}" href="?day={{ i }}{% if neighborhood %}&neighborhood={{ neighborhood }}{% endif %}">{{ day_labels[i] }}</a>
+    {% endfor %}
+  </div>
+
+  <form class="filterbar" method="get">
+    <input type="hidden" name="day" value="{{ day }}">
+    <select name="neighborhood">
+      <option value="">All neighborhoods</option>
+      {% for n in neighborhoods %}
+      <option value="{{ n }}" {% if neighborhood == n %}selected{% endif %}>{{ n }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn" type="submit">Filter</button>
+  </form>
+
+  <p style="color:var(--muted); font-size:13px; margin-bottom:16px">{{ total }} special{{ '' if total == 1 else 's' }} on {{ day_labels_full[day] }}</p>
+
+  {% for slot, items in grouped %}
+  <h2 class="playfair" style="font-size:22px; margin:24px 0 10px">{{ slot }}</h2>
+  <div class="grid cols-2">
+    {% for s in items %}
+    <a class="card" href="/social/venues/{{ s.venue.slug }}">
+      <h3>{{ s.title }}</h3>
+      <div class="meta">{{ s.venue.name }} · {{ s.venue.neighborhood }}</div>
+      <div style="color:var(--muted); font-size:13px">
+        {% if s.start_time and s.end_time %}{{ format_time(s.start_time) }}–{{ format_time(s.end_time) }} · {% endif %}
+        {{ s.deal_type.replace('_', ' ') }}
+      </div>
+      {% if s.discount_value %}<div style="margin-top:6px">{{ s.discount_value }}</div>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color:var(--muted)">Nothing on the books for {{ day_labels_full[day] }}{% if neighborhood %} in {{ neighborhood }}{% endif %}.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "social/_base.html" %}
+{% block title %}{{ neighborhood }} Happy Hours — Nashville | NashGuide Social{% endblock %}
+{% block description %}{{ venues|length }} bars and restaurants in {{ neighborhood }}, Nashville, sorted by what's running specials right now.{% endblock %}
+{% block og_title %}Happy hour in {{ neighborhood }}, Nashville{% endblock %}
+{% block content %}
+<div class="wrap">
+  <a href="/social" style="color:var(--muted); font-size:13px">← Back to Social</a>
+  <h1 class="playfair" style="font-size:32px; margin:8px 0 8px">{{ neighborhood }}</h1>
+  <p style="color:var(--muted); margin-bottom:16px">{{ venues|length }} venue{{ '' if venues|length == 1 else 's' }} · {{ happy_now|length }} running specials right now</p>
+
+  {% if ad %}
+  <div class="ad-slot">
+    <div class="ad-label">Sponsored · {{ neighborhood }}</div>
+    <a href="/social/ad/{{ ad.id }}/click">
+      <strong>{{ ad.headline or ad.advertiser_name }}</strong>
+      {% if ad.subheadline %}<div style="color:var(--muted); font-size:13px">{{ ad.subheadline }}</div>{% endif %}
+    </a>
+  </div>
+  {% endif %}
+
+  <div class="grid cols-3">
+    {% for v in venues %}
+    <a class="card" href="/social/venues/{{ v.slug }}">
+      <h3>{{ v.name }}</h3>
+      <div class="meta">{{ '$' * v.price_tier }} · {{ v.venue_type.replace('_', ' ') }}</div>
+      {% set live = v.specials | selectattr('active') | list %}
+      {% set live_now = [] %}
+      {% for s in live %}{% if is_active(s) %}{% set _ = live_now.append(s) %}{% endif %}{% endfor %}
+      {% if live_now %}
+      <div class="tag-row">
+        <span class="pill green">{{ live_now|length }} live now</span>
+      </div>
+      {% endif %}
+      <div class="tag-row">
+        {% for t in (v.vibe_tags or [])[:3] %}<span class="pill">{{ t.replace('_', ' ') }}</span>{% endfor %}
+      </div>
+    </a>
+    {% else %}
+    <p style="color:var(--muted)">No venues catalogued here yet. <a href="/social/submit" style="color:var(--amber)">Suggest one →</a></p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

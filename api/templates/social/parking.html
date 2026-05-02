@@ -1,0 +1,35 @@
+{% extends "social/_base.html" %}
+{% block title %}Where to Park in Nashville — NashGuide Social{% endblock %}
+{% block description %}Lots, garages, and street-parking notes for Broadway, the Gulch, East Nashville, and more.{% endblock %}
+{% block content %}
+<div class="wrap">
+  <h1 class="playfair" style="font-size:32px; margin-bottom:14px">Parking</h1>
+
+  <form class="filterbar" method="get">
+    <select name="near">
+      <option value="">All neighborhoods</option>
+      {% for n in neighborhoods %}
+      <option value="{{ n }}" {% if near == n %}selected{% endif %}>{{ n }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn" type="submit">Filter</button>
+  </form>
+
+  <div class="grid cols-2">
+    {% for s in spots %}
+    <div class="card">
+      <h3>{{ s.name }}</h3>
+      <div class="meta">{{ s.near_neighborhood or '' }} · {{ s.parking_type }}</div>
+      {% if s.address %}<div style="color:var(--muted); font-size:13px">{{ s.address }}</div>{% endif %}
+      <div style="margin-top:8px">
+        {% if s.nightly_rate %}<span class="pill">Nightly {{ s.nightly_rate }}</span>{% endif %}
+        {% if s.event_rate %}<span class="pill amber">Event {{ s.event_rate }}</span>{% endif %}
+      </div>
+      {% if s.notes %}<p style="color:var(--muted); font-size:13px; margin-top:8px">{{ s.notes }}</p>{% endif %}
+    </div>
+    {% else %}
+    <p style="color:var(--muted)">No parking notes catalogued yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
