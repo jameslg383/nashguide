@@ -1,0 +1,45 @@
+{% extends "social/_base.html" %}
+{% block title %}Advertise on NashGuide Social — Reach Nashville Drinkers & Diners{% endblock %}
+{% block description %}Three ad packages targeting Nashville bar-goers, restaurant traffic, and visitors browsing happy hour right now.{% endblock %}
+{% block content %}
+<div class="wrap">
+  <h1 class="playfair" style="font-size:36px; margin-bottom:8px">Advertise on NashGuide Social</h1>
+  <p style="color:var(--muted); max-width:640px">Get in front of Nashville locals and visitors actively deciding where to drink and eat. Real intent, no display network noise.</p>
+
+  {% if request.query_params.get('ok') %}
+  <div class="happy-now-strip" style="margin-top:20px">
+    <h2>Thanks — we'll be in touch within one business day.</h2>
+  </div>
+  {% endif %}
+
+  <div class="grid cols-3" style="margin-top:24px">
+    {% for pkg in packages %}
+    <div class="card">
+      <h3>{{ pkg.name }}</h3>
+      <div class="meta" style="font-size:24px; color:var(--amber); font-weight:800">${{ pkg.price }}<span style="font-size:13px; color:var(--muted)">/mo</span></div>
+      <p style="color:var(--muted); font-size:13px; margin-top:8px">
+        {% if pkg.slot == 'neighborhood_top' %}Top placement on a neighborhood page of your choice. Best for venues, hotels, and boutiques.{% endif %}
+        {% if pkg.slot == 'venue_inline' %}Vibe- or neighborhood-targeted card on every matching venue page.{% endif %}
+        {% if pkg.slot == 'homepage_banner' %}First thing visitors see when they land on /social.{% endif %}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <h2 class="playfair" style="font-size:24px; margin:32px 0 12px">Get in touch</h2>
+  <form method="post" action="/social/advertise" class="card" style="display:grid; gap:12px; max-width:560px">
+    <div style="position:absolute; left:-9999px; height:1px; width:1px; overflow:hidden" aria-hidden="true">
+      <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+    </div>
+    <label>Business name <input type="text" name="advertiser_name" required style="width:100%"></label>
+    <label>Contact email <input type="email" name="contact_email" required style="width:100%"></label>
+    <label>Package
+      <select name="package" style="width:100%">
+        {% for pkg in packages %}<option value="{{ pkg.slot }}">{{ pkg.name }} (${{ pkg.price }}/mo)</option>{% endfor %}
+      </select>
+    </label>
+    <label>Notes <textarea name="notes" rows="3" style="width:100%"></textarea></label>
+    <button class="btn" type="submit">Request info</button>
+  </form>
+</div>
+{% endblock %}

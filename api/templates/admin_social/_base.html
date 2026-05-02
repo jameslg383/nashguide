@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{% block title %}Social Admin{% endblock %} — NashGuide</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; background:#0a0a0f; color:#f4f4f4; max-width:1200px; margin:0 auto; padding:20px; }
+  h1 { color:#f59e0b; }
+  a { color:#f59e0b; }
+  table { width:100%; border-collapse:collapse; margin-top:14px; font-size:13px; }
+  table th, table td { padding:8px 10px; border-bottom:1px solid #2a2a30; text-align:left; vertical-align:top; }
+  table th { background:#15151b; color:#9ca3af; text-transform:uppercase; font-size:11px; letter-spacing:1px; }
+  .nav { display:flex; gap:14px; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #2a2a30; }
+  form.inline { display:inline; }
+  button, .btn { background:#f59e0b; color:#000; border:none; padding:6px 12px; border-radius:6px; font-weight:700; cursor:pointer; font-size:12px; }
+  button.danger { background:#c8102e; color:#fff; }
+  button.secondary { background:transparent; color:#f4f4f4; border:1px solid #2a2a30; }
+  pre { background:#15151b; padding:10px; border-radius:6px; overflow-x:auto; font-size:12px; max-width:600px; white-space:pre-wrap; }
+  input, select, textarea { background:#15151b; color:#f4f4f4; border:1px solid #2a2a30; border-radius:6px; padding:6px 10px; font-family:inherit; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <a href="/admin/social?key={{ key }}">Home</a>
+  <a href="/admin/social/submissions?key={{ key }}">Submissions</a>
+  <a href="/admin/social/venues?key={{ key }}">Venues</a>
+  <a href="/admin/social/specials?key={{ key }}">Specials</a>
+  <a href="/admin/social/ads?key={{ key }}">Ads</a>
+  <a href="/admin/social/scrape?key={{ key }}">Scrape</a>
+</div>
+{% block content %}{% endblock %}
+</body>
+</html>

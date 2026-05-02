@@ -38,6 +38,29 @@ Flow:
 5. **Marketing** runs on cron (APScheduler): tweets daily 9am, blog Mondays 10am.
 6. **Updater** sweeps venues Sundays 4am.
 
+## `/social` — Nashville Happy Hours & Specials
+
+A separate vertical living on the same host: the live source of truth for
+Nashville happy hours, drink/food specials, and venue specials. Mobile-first.
+
+- Public landing: `/social` — sticky "Happy Now" pill on every page.
+- Live JSON: `/social/now` (active specials, America/Chicago).
+- Master schedule: `/social/happy-hours`.
+- Submissions: `/social/submit` (rate-limited, honeypot-protected).
+- Advertising: `/social/advertise` (three packages, lead form).
+- Admin: `/admin/social?key=$NASHGUIDE_ADMIN_KEY` — moderation queue, venue
+  CRUD, ad placements, AI scrape stub.
+
+Set up:
+
+```bash
+echo 'NASHGUIDE_ADMIN_KEY=<random>' >> .env
+docker compose exec api alembic upgrade head    # create the 5 social tables
+docker compose exec api python -m scripts.seed_social  # 40 venues, 60 specials, 7 parking
+```
+
+Full deploy notes & pre-launch verification checklist: see `SOCIAL_BUILD_NOTES.md`.
+
 ## Deployment (Hetzner 87.99.137.43 alongside NASHTY)
 
 Runs on port 8080 — NASHTY stays on 80. If you want to share the existing NASHTY postgres/redis instead of spinning up new ones, edit `docker-compose.yml` to remove `nashguide-postgres` / `nashguide-redis` services and point `DATABASE_URL` / `REDIS_URL` at the NASHTY containers by their network alias.

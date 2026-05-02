@@ -1,0 +1,12 @@
+{% extends "social/_base.html" %}
+{% block title %}Submission received — NashGuide Social{% endblock %}
+{% block content %}
+<div class="wrap" style="text-align:center; padding-top:60px">
+  <h1 class="playfair" style="font-size:32px">Got it. Thanks.</h1>
+  <p style="color:var(--muted); margin-top:10px">{% if submission_id %}Submission #{{ submission_id }} is in the queue. {% endif %}A human will review it shortly.</p>
+  <div style="margin-top:24px">
+    <a class="btn" href="/social">Back to Social</a>
+    <a class="btn secondary" href="/social/submit">Submit another</a>
+  </div>
+</div>
+{% endblock %}

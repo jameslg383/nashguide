@@ -30,5 +30,6 @@ def init_db():
         content,
         analytics_event,
         promo_code,
+        social,
     )
     Base.metadata.create_all(bind=engine)
