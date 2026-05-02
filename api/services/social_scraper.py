@@ -1,12 +1,14 @@
-"""Stub for AI-driven happy-hour scraping.
+"""AI-driven happy-hour scraper.
 
-The scaffold lives so admins can paste a venue URL and have an LLM extract
-specials. Results are *never* written directly to live tables — they go into
-`user_submissions` with `source='scraped'` so a human approves them.
+Pipeline: fetch (Firecrawl preferred, httpx fallback) → LLM extraction
+(Anthropic) → structured `{venue, specials}` dict. Results never write to
+live tables — callers route them through `user_submissions` with
+`source='scraped'` for human approval.
 
-`scrape_venue` is the public entry point. It does the HTTP fetch, hands the
-text body to the existing Anthropic client, and returns a dict shaped like
-`{venue: {...}, specials: [...]}`. Errors bubble up; callers wrap.
+Public entry points:
+- `scrape_venue(url)` — full pipeline.
+- `extract_from_text(url, body, *, hint=None)` — skip the fetch, useful when
+  Firecrawl already gave us markdown.
 """
 from __future__ import annotations
 
@@ -18,6 +20,7 @@ from typing import Any
 import httpx
 
 from api.config import settings
+from api.services import firecrawl_client
 from api.services.claude_ai import client
 
 log = logging.getLogger("social_scraper")
@@ -52,7 +55,8 @@ days_of_week: Monday=0, Sunday=6.
 """
 
 
-def _fetch(url: str, timeout: float = 15.0) -> str:
+def _fetch_httpx(url: str, timeout: float = 15.0) -> str:
+    """Plain HTTP fallback when Firecrawl isn't configured."""
     headers = {"User-Agent": "NashGuideSocialBot/0.1 (+https://nashguide.online)"}
     with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as h:
         r = h.get(url)
@@ -81,6 +85,46 @@ def _parse_json_block(text: str) -> dict:
     return json.loads(text)
 
 
+def fetch_page(url: str) -> tuple[str, str]:
+    """Return (body_text, fetcher_name).
+
+    Prefers Firecrawl markdown (cleaner, JS-rendered, better for LLMs); falls
+    back to a plain httpx GET + tag-strip otherwise.
+    """
+    if firecrawl_client.is_configured():
+        page = firecrawl_client.scrape(url)
+        if page and (page.get("markdown") or page.get("html")):
+            body = page.get("markdown") or _strip_html(page.get("html") or "")
+            return body[:20000], "firecrawl"
+        log.warning("Firecrawl returned no body for %s; falling back to httpx", url)
+    raw = _fetch_httpx(url)
+    return _strip_html(raw), "httpx"
+
+
+def extract_from_text(
+    url: str,
+    body: str,
+    *,
+    hint: str | None = None,
+) -> dict[str, Any]:
+    """Run the LLM extraction over already-fetched body text."""
+    if not settings.ANTHROPIC_API_KEY:
+        raise RuntimeError("ANTHROPIC_API_KEY not configured")
+    user_msg = f"Source URL: {url}\n\n"
+    if hint:
+        user_msg += f"Hint: {hint}\n\n"
+    user_msg += f"Page text:\n{body[:18000]}\n\nReturn JSON in this schema only:\n{SCRAPE_SCHEMA}"
+    msg = client().messages.create(
+        model=settings.ANTHROPIC_MODEL,
+        max_tokens=2000,
+        system=SCRAPE_SYSTEM,
+        messages=[{"role": "user", "content": user_msg}],
+    )
+    out = _parse_json_block(msg.content[0].text)
+    out.setdefault("venue", {})["website"] = out.get("venue", {}).get("website") or url
+    return out
+
+
 def scrape_venue(url: str) -> dict[str, Any]:
     """Fetch `url`, ask Claude to extract structured data, return the dict.
 
@@ -88,28 +132,10 @@ def scrape_venue(url: str) -> dict[str, Any]:
     model output, anthropic exceptions on API failure. Callers should catch
     and surface a friendly message.
     """
-    if not settings.ANTHROPIC_API_KEY:
-        raise RuntimeError("ANTHROPIC_API_KEY not configured")
-
-    raw = _fetch(url)
-    body = _strip_html(raw)
-
-    msg = client().messages.create(
-        model=settings.ANTHROPIC_MODEL,
-        max_tokens=2000,
-        system=SCRAPE_SYSTEM,
-        messages=[
-            {
-                "role": "user",
-                "content": (
-                    f"Source URL: {url}\n\n"
-                    f"Page text:\n{body}\n\n"
-                    f"Return JSON in this schema only:\n{SCRAPE_SCHEMA}"
-                ),
-            }
-        ],
+    body, fetcher = fetch_page(url)
+    out = extract_from_text(url, body)
+    log.info(
+        "scrape_venue ok url=%s fetcher=%s specials=%d",
+        url, fetcher, len(out.get("specials") or []),
     )
-    out = _parse_json_block(msg.content[0].text)
-    out.setdefault("venue", {})["website"] = out.get("venue", {}).get("website") or url
-    log.info("scrape_venue ok url=%s specials=%d", url, len(out.get("specials") or []))
     return out

@@ -73,12 +73,43 @@ pre-launch verification checklist.
 - `test_admin_and_ads.py` — every admin path 401s without/with-wrong key, 200s with correct key; ad click increments counter and 302-redirects; missing ad 404s.
 - 12 new tests, all green. Existing smoke tests still pass.
 
+## Web scraping (Firecrawl)
+
+A scheduled scraper agent + admin tooling now drives ingestion. **Output
+always lands in the moderation queue — never live tables.**
+
+- **`api/services/firecrawl_client.py`** — thin wrapper over the Firecrawl
+  SDK. Disconnected unless `FIRECRAWL_API_KEY` is set; falls back to plain
+  httpx in that case.
+- **`api/services/social_scraper.py`** — pipeline split into `fetch_page`
+  (Firecrawl-or-httpx) and `extract_from_text` (Anthropic). `scrape_venue`
+  composes them.
+- **`agents/social_scraper_agent.py`** — runs as a thread inside
+  `agents/run_all.py`. APScheduler drives:
+  - daily-frequency sources at 03:30 CT every day,
+  - weekly-frequency sources at 04:30 CT on Sundays,
+  - manual-frequency sources only on admin-triggered run-now.
+  Per-source 4-second delay, 50-source-per-run cap, fault-tolerant
+  (one failure won't stop the loop; it's logged on the source row).
+- **New table `scrape_sources`** — URLs to monitor, with `source_type`
+  (`venue_page` for 1:1 pages, `listing_page` for roundup articles), label,
+  frequency, last_scraped_at, last_status, last_error, last_specials_found.
+  Migration `20260502_02_add_scrape_sources`.
+- **Admin UI at `/admin/social/scrape`** — list/add/run-now/pause/delete
+  sources, Firecrawl-powered web search to discover candidate URLs (one
+  click "+ Track" to schedule them), one-off scrape input for testing.
+
+The scrape agent and Firecrawl integration honor existing kill switches:
+- `SOCIAL_SCRAPER_ENABLED=false` → agent skips its sweeps.
+- `FIRECRAWL_API_KEY` empty → all fetches fall back to httpx; nothing breaks.
+
 ## What was deferred
 
-- **Real scraping.** The LLM-extraction scaffold is wired but no scheduled
-  scrape runs. Manual trigger from `/admin/social/scrape` only. Adding a
-  recurring APScheduler job is a few lines once you have a curated list of
-  source URLs.
+- **Auto-merging scraped specials.** Findings always require a human click
+  in the moderation queue. Could be lifted with a confidence-score field
+  later, but the right MVP is human-in-the-loop.
+- **Firecrawl crawl mode** (recursively expand a venue's site to find a
+  hidden /happy-hour page). Single-page `/scrape` is enough for v1.
 - **Photo uploads.** Venue detail templates have a placeholder where photos
   would slot. We didn't build the upload pipeline — venues currently use
   text + map link only.
@@ -154,8 +185,10 @@ cd /opt/nashguide   # adjust to actual deploy root
 
 git pull origin claude/nashguide-social-build-f3YLU   # or main, after merge
 
-# 1. Add the env var (once)
+# 1. Add the env vars (once)
 echo 'NASHGUIDE_ADMIN_KEY=<pick-a-strong-random-string>' >> .env
+echo 'FIRECRAWL_API_KEY=<your-firecrawl-key-or-leave-blank>' >> .env
+echo 'SOCIAL_SCRAPER_ENABLED=true' >> .env
 
 # 2. Rebuild + restart so the new code + env are picked up
 docker compose build api
@@ -196,20 +229,26 @@ existing data.
 ## Files added / changed
 
 ```
-alembic/env.py                                  (new)
-alembic/script.py.mako                          (new)
-alembic/versions/20260502_01_add_social_tables.py  (new)
-api/models/social.py                            (new)
-api/services/social_scraper.py                  (new)
-api/routes/social.py                            (new)
-api/templates/social/*.html                     (new — 9 files)
-api/templates/admin_social/*.html               (new — 6 files)
-scripts/seed_social.py                          (new)
-tests/social/*.py                               (new — 5 files inc. conftest)
-SOCIAL_BUILD_NOTES.md                           (new — this file)
+alembic/env.py                                                  (new)
+alembic/script.py.mako                                          (new)
+alembic/versions/20260502_01_add_social_tables.py               (new)
+alembic/versions/20260502_02_add_scrape_sources.py              (new)
+api/models/social.py                                            (new — 6 models)
+api/services/social_scraper.py                                  (new)
+api/services/firecrawl_client.py                                (new)
+api/routes/social.py                                            (new)
+api/templates/social/*.html                                     (new — 9 files)
+api/templates/admin_social/*.html                               (new — 6 files)
+agents/social_scraper_agent.py                                  (new — APScheduler-based)
+scripts/seed_social.py                                          (new)
+tests/social/*.py                                               (new — 7 files inc. conftest)
+SOCIAL_BUILD_NOTES.md                                           (new — this file)
 
-api/main.py                                     (added `social` to imports + include_router)
-api/models/database.py                          (added `social` to init_db imports)
-api/config.py                                   (added NASHGUIDE_ADMIN_KEY + social_default_tz)
-README.md                                       (added /social section)
+agents/run_all.py                                               (added social_scraper thread)
+api/main.py                                                     (added social router)
+api/models/database.py                                          (added social to init_db imports)
+api/config.py                                                   (NASHGUIDE_ADMIN_KEY, FIRECRAWL_API_KEY, SOCIAL_SCRAPER_ENABLED, social_default_tz)
+.env.example                                                    (new env vars)
+requirements.txt                                                (firecrawl-py)
+README.md                                                       (/social section)
 ```

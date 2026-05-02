@@ -1,19 +1,125 @@
 {% extends "admin_social/_base.html" %}
 {% block title %}Scrape{% endblock %}
 {% block content %}
-<h1>Scrape a venue page</h1>
-<p style="color:#9ca3af">Hits the LLM, extracts structured specials, drops them into the moderation queue. Never writes live data.</p>
-<form method="post" action="/admin/social/scrape?key={{ key }}" style="display:flex; gap:8px; margin-top:16px">
-  <input name="url" placeholder="https://venue.example/happy-hour" value="{{ url or '' }}" style="flex:1">
-  <button type="submit">Scrape</button>
+<h1>Scraper agent</h1>
+<p style="color:#9ca3af">
+  Firecrawl: <strong style="color:{% if firecrawl_configured %}#22c55e{% else %}#c8102e{% endif %}">{% if firecrawl_configured %}configured{% else %}not configured (falling back to httpx fetch){% endif %}</strong>.
+  Output always lands in the moderation queue — this never auto-writes live data.
+</p>
+
+{% if request.query_params.get('ok') %}
+<div style="background:rgba(34,197,94,.15); border:1px solid #22c55e; padding:10px 14px; border-radius:8px; margin:16px 0">Scrape queued. <a href="/admin/social/submissions?key={{ key }}">→ Review</a></div>
+{% endif %}
+{% if request.query_params.get('err') %}
+<div style="background:rgba(200,16,46,.15); border:1px solid #c8102e; padding:10px 14px; border-radius:8px; margin:16px 0">Failed: {{ request.query_params.get('err') }}</div>
+{% endif %}
+{% if request.query_params.get('dup') %}
+<div style="background:rgba(245,158,11,.15); border:1px solid #f59e0b; padding:10px 14px; border-radius:8px; margin:16px 0">URL already tracked.</div>
+{% endif %}
+
+<h2 style="margin-top:24px; font-size:18px">Scheduled sources ({{ sources|length }})</h2>
+<p style="color:#9ca3af; font-size:13px">
+  daily-frequency runs at 03:30 CT every day; weekly runs Sunday 04:30 CT;
+  manual only runs when you click "Run now".
+</p>
+<table>
+  <thead><tr><th>ID</th><th>URL / label</th><th>Type</th><th>Freq</th><th>Last scraped</th><th>Status</th><th>Found</th><th>Active</th><th></th></tr></thead>
+  <tbody>
+  {% for s in sources %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td>
+        <a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.label or s.url }}</a>
+        <br><small style="color:#6b7280">{{ s.url }}</small>
+      </td>
+      <td>{{ s.source_type }}</td>
+      <td>{{ s.frequency }}</td>
+      <td>{{ s.last_scraped_at.strftime('%Y-%m-%d %H:%M') if s.last_scraped_at else '—' }}</td>
+      <td>
+        {% if s.last_status == 'ok' %}<span style="color:#22c55e">ok</span>
+        {% elif s.last_status == 'error' %}<span style="color:#c8102e">error</span><br><small>{{ (s.last_error or '')[:80] }}</small>
+        {% else %}—{% endif %}
+      </td>
+      <td>{{ s.last_specials_found }}</td>
+      <td>{{ '✔' if s.active else '—' }}</td>
+      <td>
+        <form class="inline" method="post" action="/admin/social/scrape/sources/{{ s.id }}/run?key={{ key }}">
+          <button type="submit">Run now</button>
+        </form>
+        <form class="inline" method="post" action="/admin/social/scrape/sources/{{ s.id }}/toggle?key={{ key }}">
+          <button class="secondary" type="submit">{{ 'Pause' if s.active else 'Resume' }}</button>
+        </form>
+        <form class="inline" method="post" action="/admin/social/scrape/sources/{{ s.id }}/delete?key={{ key }}"
+              onsubmit="return confirm('Delete source?')">
+          <button class="danger" type="submit">×</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="9" style="color:#6b7280">No sources tracked yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2 style="margin-top:30px; font-size:18px">Add a source</h2>
+<form method="post" action="/admin/social/scrape/sources/add?key={{ key }}" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; max-width:780px; background:#15151b; padding:14px; border-radius:8px">
+  <input name="url" placeholder="https://venue.example/happy-hour" required style="grid-column:1/3">
+  <input name="label" placeholder="Label (optional)">
+  <select name="source_type">
+    {% for t in source_types %}<option value="{{ t }}">{{ t.replace('_', ' ') }}</option>{% endfor %}
+  </select>
+  <select name="frequency">
+    {% for f in frequencies %}<option value="{{ f }}" {% if f == 'weekly' %}selected{% endif %}>{{ f }}</option>{% endfor %}
+  </select>
+  <button type="submit" style="grid-column:1/3">Add to schedule</button>
 </form>
+
+<h2 style="margin-top:30px; font-size:18px">Find pages with Firecrawl search</h2>
+{% if firecrawl_configured %}
+<form method="post" action="/admin/social/scrape/search?key={{ key }}" style="display:flex; gap:8px; max-width:780px">
+  <input name="q" placeholder='e.g. "Nashville Gulch happy hour"' value="{{ search_query or '' }}" style="flex:1">
+  <button type="submit">Search</button>
+</form>
+{% else %}
+<p style="color:#9ca3af">Set <code>FIRECRAWL_API_KEY</code> to enable web search.</p>
+{% endif %}
+{% if search_results %}
+<table style="margin-top:14px">
+  <thead><tr><th>Title</th><th>URL</th><th></th></tr></thead>
+  <tbody>
+  {% for r in search_results %}
+    <tr>
+      <td>{{ r.title or '—' }}<br><small style="color:#6b7280">{{ (r.description or '')[:120] }}</small></td>
+      <td><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.url }}</a></td>
+      <td>
+        <form class="inline" method="post" action="/admin/social/scrape/sources/add?key={{ key }}">
+          <input type="hidden" name="url" value="{{ r.url }}">
+          <input type="hidden" name="label" value="{{ r.title or '' }}">
+          <input type="hidden" name="source_type" value="listing_page">
+          <input type="hidden" name="frequency" value="weekly">
+          <button type="submit">+ Track</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<h2 style="margin-top:30px; font-size:18px">One-off scrape</h2>
+<p style="color:#9ca3af; font-size:13px">Quick test — runs once, drops into the queue, doesn't add a tracked source.</p>
+<form method="post" action="/admin/social/scrape?key={{ key }}" style="display:flex; gap:8px; max-width:780px">
+  <input name="url" placeholder="https://venue.example/happy-hour" value="{{ url or '' }}" style="flex:1">
+  <button type="submit">Scrape now</button>
+</form>
+
 {% if error %}
 <div style="background:rgba(200,16,46,.15); border:1px solid #c8102e; padding:14px; border-radius:8px; margin-top:18px">
   <strong>Error:</strong> {{ error }}
 </div>
 {% endif %}
 {% if result %}
-<h2 style="margin-top:24px; font-size:16px">Extracted (queued for review)</h2>
+<h3 style="margin-top:18px; font-size:14px">Last result (queued for review)</h3>
 <pre>{{ result | tojson(indent=2) }}</pre>
 <p><a href="/admin/social/submissions?key={{ key }}">→ Review in submissions queue</a></p>
 {% endif %}

@@ -42,8 +42,11 @@ from api.models.social import (
     AdPlacement,
     HappyHourSpecial,
     ParkingSpot,
+    ScrapeSource,
     SocialVenue,
     UserSubmission,
+    SCRAPE_FREQUENCIES,
+    SCRAPE_SOURCE_TYPES,
     VENUE_TYPES,
     VIBE_TAGS,
 )
@@ -1104,10 +1107,29 @@ def admin_ads_export(
 def admin_scrape_form(
     request: Request,
     _: bool = Depends(require_social_admin),
+    db: Session = Depends(get_db),
 ):
+    from api.services import firecrawl_client
+    sources = (
+        db.query(ScrapeSource)
+        .order_by(ScrapeSource.active.desc(), ScrapeSource.last_scraped_at.desc().nullslast())
+        .all()
+    )
     return templates.TemplateResponse(
         "admin_social/scrape.html",
-        {"request": request, "key": _admin_key(), "result": None, "error": None, "url": ""},
+        {
+            "request": request,
+            "key": _admin_key(),
+            "sources": sources,
+            "frequencies": SCRAPE_FREQUENCIES,
+            "source_types": SCRAPE_SOURCE_TYPES,
+            "firecrawl_configured": firecrawl_client.is_configured(),
+            "result": None,
+            "error": None,
+            "url": "",
+            "search_results": None,
+            "search_query": "",
+        },
     )
 
 
@@ -1117,6 +1139,10 @@ async def admin_scrape_run(
     _: bool = Depends(require_social_admin),
     db: Session = Depends(get_db),
 ):
+    """Ad-hoc scrape: enter a URL, run it through the agent pipeline,
+    queue the result for moderation. Doesn't persist as a source — for that
+    use /admin/social/scrape/sources/add.
+    """
     form = await request.form()
     url = (form.get("url") or "").strip()
     if not url:
@@ -1128,19 +1154,138 @@ async def admin_scrape_run(
         result = social_scraper.scrape_venue(url)
         sub = UserSubmission(
             submission_type="new_venue",
-            payload_json={"scraped": result, "source_url": url},
+            payload_json={"scraped": result, "source_url": url, "agent": "admin_adhoc"},
             submitter_email=None,
             submitter_ip="admin-scrape",
             status="pending",
         )
         db.add(sub)
         db.commit()
-    except Exception as e:  # noqa: BLE001 — we want to surface any failure
+    except Exception as e:  # noqa: BLE001 — surface failure without crashing
         log.exception("Scrape failed for %s", url)
         error = str(e)
+
+    from api.services import firecrawl_client
+    sources = (
+        db.query(ScrapeSource)
+        .order_by(ScrapeSource.active.desc(), ScrapeSource.last_scraped_at.desc().nullslast())
+        .all()
+    )
     return templates.TemplateResponse(
         "admin_social/scrape.html",
-        {"request": request, "key": _admin_key(), "url": url, "result": result, "error": error},
+        {
+            "request": request,
+            "key": _admin_key(),
+            "sources": sources,
+            "frequencies": SCRAPE_FREQUENCIES,
+            "source_types": SCRAPE_SOURCE_TYPES,
+            "firecrawl_configured": firecrawl_client.is_configured(),
+            "url": url,
+            "result": result,
+            "error": error,
+            "search_results": None,
+            "search_query": "",
+        },
+    )
+
+
+@router.post("/admin/social/scrape/sources/add")
+async def admin_scrape_add_source(
+    request: Request,
+    _: bool = Depends(require_social_admin),
+    db: Session = Depends(get_db),
+):
+    form = await request.form()
+    url = (form.get("url") or "").strip()
+    if not url:
+        raise HTTPException(400, "URL required")
+    if db.query(ScrapeSource).filter(ScrapeSource.url == url).first():
+        return RedirectResponse(f"/admin/social/scrape?key={_admin_key()}&dup=1", status_code=303)
+    src = ScrapeSource(
+        url=url,
+        label=(form.get("label") or None),
+        source_type=(form.get("source_type") or "venue_page"),
+        frequency=(form.get("frequency") or "weekly"),
+        active=True,
+    )
+    db.add(src)
+    db.commit()
+    return RedirectResponse(f"/admin/social/scrape?key={_admin_key()}", status_code=303)
+
+
+@router.post("/admin/social/scrape/sources/{source_id}/run")
+def admin_scrape_run_source(
+    source_id: int,
+    _: bool = Depends(require_social_admin),
+):
+    from agents import social_scraper_agent
+    result = social_scraper_agent.run_source(source_id)
+    log.info("Manual run_source result: %s", result)
+    qs = "ok=1" if result.get("ok") else f"err={result.get('error', 'fail')[:80]}"
+    return RedirectResponse(f"/admin/social/scrape?key={_admin_key()}&{qs}", status_code=303)
+
+
+@router.post("/admin/social/scrape/sources/{source_id}/toggle")
+def admin_scrape_toggle_source(
+    source_id: int,
+    _: bool = Depends(require_social_admin),
+    db: Session = Depends(get_db),
+):
+    src = db.get(ScrapeSource, source_id)
+    if not src:
+        raise HTTPException(404, "Not found")
+    src.active = not src.active
+    db.commit()
+    return RedirectResponse(f"/admin/social/scrape?key={_admin_key()}", status_code=303)
+
+
+@router.post("/admin/social/scrape/sources/{source_id}/delete")
+def admin_scrape_delete_source(
+    source_id: int,
+    _: bool = Depends(require_social_admin),
+    db: Session = Depends(get_db),
+):
+    src = db.get(ScrapeSource, source_id)
+    if not src:
+        raise HTTPException(404, "Not found")
+    db.delete(src)
+    db.commit()
+    return RedirectResponse(f"/admin/social/scrape?key={_admin_key()}", status_code=303)
+
+
+@router.post("/admin/social/scrape/search", response_class=HTMLResponse)
+async def admin_scrape_search(
+    request: Request,
+    _: bool = Depends(require_social_admin),
+    db: Session = Depends(get_db),
+):
+    """Use Firecrawl's search to find candidate Nashville happy-hour pages.
+    Results are not persisted — admin clicks "add" on the ones worth tracking.
+    """
+    form = await request.form()
+    q = (form.get("q") or "").strip()
+    from api.services import firecrawl_client
+    results = firecrawl_client.search(q, limit=15) if q else []
+    sources = (
+        db.query(ScrapeSource)
+        .order_by(ScrapeSource.active.desc(), ScrapeSource.last_scraped_at.desc().nullslast())
+        .all()
+    )
+    return templates.TemplateResponse(
+        "admin_social/scrape.html",
+        {
+            "request": request,
+            "key": _admin_key(),
+            "sources": sources,
+            "frequencies": SCRAPE_FREQUENCIES,
+            "source_types": SCRAPE_SOURCE_TYPES,
+            "firecrawl_configured": firecrawl_client.is_configured(),
+            "url": "",
+            "result": None,
+            "error": None,
+            "search_results": results,
+            "search_query": q,
+        },
     )
 
 

@@ -156,6 +156,38 @@ class UserSubmission(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+SCRAPE_SOURCE_TYPES = ("venue_page", "listing_page")
+SCRAPE_FREQUENCIES = ("manual", "daily", "weekly")
+
+
+class ScrapeSource(Base):
+    """A URL the scraper agent should periodically visit.
+
+    `venue_page` URLs are scraped 1:1 — output expected to describe one venue
+    plus its specials. `listing_page` URLs are roundup articles ("best happy
+    hours in Nashville right now") — the LLM will extract multiple venues.
+
+    Every scrape, regardless of source, drops results into `user_submissions`
+    for human approval. We never auto-write live data.
+    """
+    __tablename__ = "scrape_sources"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    url: Mapped[str] = mapped_column(String(512), unique=True, index=True)
+    label: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    source_type: Mapped[str] = mapped_column(String(24), default="venue_page")
+    frequency: Mapped[str] = mapped_column(String(16), default="weekly")
+    venue_id: Mapped[int | None] = mapped_column(
+        ForeignKey("social_venues.id", ondelete="SET NULL"), nullable=True
+    )
+    last_scraped_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_status: Mapped[str | None] = mapped_column(String(48), nullable=True)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_specials_found: Mapped[int] = mapped_column(Integer, default=0)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class AdPlacement(Base):
     __tablename__ = "ad_placements"
 

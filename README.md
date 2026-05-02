@@ -49,7 +49,11 @@ Nashville happy hours, drink/food specials, and venue specials. Mobile-first.
 - Submissions: `/social/submit` (rate-limited, honeypot-protected).
 - Advertising: `/social/advertise` (three packages, lead form).
 - Admin: `/admin/social?key=$NASHGUIDE_ADMIN_KEY` — moderation queue, venue
-  CRUD, ad placements, AI scrape stub.
+  CRUD, ad placements, scraper agent (Firecrawl).
+- Scraper agent: `agents/social_scraper_agent.py` — runs as a thread inside
+  `agents/run_all.py`. Reads `scrape_sources`, fetches via Firecrawl when
+  `FIRECRAWL_API_KEY` is set (httpx fallback otherwise), uses Anthropic to
+  extract structured specials, drops them into the moderation queue.
 
 Set up:
 

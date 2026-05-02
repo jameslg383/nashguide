@@ -21,3 +21,4 @@ tweepy==4.14.0
 beautifulsoup4==4.12.3
 python-multipart==0.0.12
 apscheduler==3.10.4
+firecrawl-py==1.5.0

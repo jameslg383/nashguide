@@ -25,6 +25,10 @@ class Settings(BaseSettings):
 
     GOOGLE_MAPS_API_KEY: str = ""
 
+    FIRECRAWL_API_KEY: str = ""               # https://firecrawl.dev — used by social scraper agent
+    FIRECRAWL_BASE_URL: str = ""              # optional, override for self-hosted firecrawl
+    SOCIAL_SCRAPER_ENABLED: bool = True       # toggle the cron-driven scrape agent
+
     SECRET_KEY: str = "dev-secret"
     admin_key: str = "dev-admin"  # reads ADMIN_KEY env var — legacy ?key= auth
     nashguide_admin_key: str = ""  # reads NASHGUIDE_ADMIN_KEY — used by /admin/social/*
